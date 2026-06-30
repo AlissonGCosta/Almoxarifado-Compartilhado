@@ -26,19 +26,25 @@ do Next.js, TypeScript, Tailwind CSS e ESLint.
 | TypeScript | 5.x |
 | Tailwind CSS | 4.x |
 | ESLint | 9.x |
-| Node.js | 20.20.2 |
-| npm | 10.8.2 |
+| Node.js | 24.18.0 LTS |
+| npm | 11.16.0 |
 
-As versões de Node.js e npm acima correspondem ao ambiente usado no setup
-inicial. As versões exatas das dependências estão registradas em
+A versão do Node.js é padronizada pelo arquivo [`.nvmrc`](./.nvmrc). As versões
+exatas das dependências estão registradas em
 [`frontend/package-lock.json`](./frontend/package-lock.json).
 
 ### Executando localmente
 
 Pré-requisitos:
 
-- Node.js 20.x
-- npm 10.x
+- Node.js 24.18.0
+- npm 11.16.0
+
+Com o NVM instalado, ative a versão definida pelo projeto:
+
+```bash
+nvm use 24.18.0
+```
 
 Instale as dependências:
 
