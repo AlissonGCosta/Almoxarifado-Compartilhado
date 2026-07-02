@@ -75,5 +75,65 @@ Execute os comandos dentro de `frontend/`.
 
 ## Back-end
 
-O back-end ainda será adicionado ao monorepo. Sua documentação específica
-deverá ficar dentro do respectivo diretório.
+O back-end está localizado em [`backend/`](./backend) e foi desenvolvido com
+Spring Boot, seguindo uma arquitetura em camadas para gerenciamento dos itens
+do almoxarifado.
+
+### Tecnologias e versões
+
+| Tecnologia | Versão |
+| --- | --- |
+| Java | 21 |
+| Spring Boot | 3.5.16 |
+| Spring Data JPA | 3.5.16 |
+| Spring Validation | 3.5.16 |
+| Spring Security | 3.5.16 |
+| PostgreSQL | Runtime |
+| H2 Database | Runtime |
+| Lombok | Última estável |
+| Swagger / OpenAPI (Springdoc) | 2.8.9 |
+| Maven | 3.x |
+
+### Executando localmente
+
+Pré-requisitos:
+
+- Java 21
+- Maven 3.x
+
+Instale as dependências e execute a aplicação:
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+A API ficará disponível em:
+
+- http://localhost:8080
+
+A documentação da API (Swagger) poderá ser acessada em:
+
+- http://localhost:8080/swagger-ui/index.html
+
+### Funcionalidades implementadas
+
+- Cadastro de itens
+- Listagem de itens
+- Busca de item por ID
+- Atualização de itens
+- Exclusão de itens
+- Validação de dados com Bean Validation
+- Tratamento global de exceções
+- Documentação automática da API com Swagger/OpenAPI
+
+### Scripts disponíveis
+
+Execute os comandos dentro de `backend/`.
+
+| Comando | Descrição |
+| --- | --- |
+| `mvn spring-boot:run` | Inicia a aplicação |
+| `mvn test` | Executa os testes |
+| `mvn clean` | Remove os arquivos gerados |
+| `mvn clean install` | Compila e instala as dependências |
