@@ -1,8 +1,8 @@
-package br.hackathon.com.example.almoxarifado_compartilhado.controller;
+package br.hackathon.com.example.almoxarifado_compartilhado.item.controller;
 
-import br.hackathon.com.example.almoxarifado_compartilhado.dto.ItemRequest;
-import br.hackathon.com.example.almoxarifado_compartilhado.dto.ItemResponse;
-import br.hackathon.com.example.almoxarifado_compartilhado.service.ItemService;
+import br.hackathon.com.example.almoxarifado_compartilhado.item.dto.ItemRequest;
+import br.hackathon.com.example.almoxarifado_compartilhado.item.dto.ItemResponse;
+import br.hackathon.com.example.almoxarifado_compartilhado.item.service.ItemService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

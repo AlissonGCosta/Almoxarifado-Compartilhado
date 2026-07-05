@@ -1,4 +1,4 @@
-package br.hackathon.com.example.almoxarifado_compartilhado.dto;
+package br.hackathon.com.example.almoxarifado_compartilhado.item.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
