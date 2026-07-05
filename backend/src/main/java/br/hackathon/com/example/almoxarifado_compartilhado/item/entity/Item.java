@@ -1,4 +1,4 @@
-package br.hackathon.com.example.almoxarifado_compartilhado.entity;
+package br.hackathon.com.example.almoxarifado_compartilhado.item.entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;

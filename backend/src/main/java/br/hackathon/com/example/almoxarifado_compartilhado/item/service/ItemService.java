@@ -1,10 +1,10 @@
-package br.hackathon.com.example.almoxarifado_compartilhado.service;
+package br.hackathon.com.example.almoxarifado_compartilhado.item.service;
 
-import br.hackathon.com.example.almoxarifado_compartilhado.dto.ItemRequest;
-import br.hackathon.com.example.almoxarifado_compartilhado.dto.ItemResponse;
-import br.hackathon.com.example.almoxarifado_compartilhado.entity.Item;
+import br.hackathon.com.example.almoxarifado_compartilhado.item.dto.ItemRequest;
+import br.hackathon.com.example.almoxarifado_compartilhado.item.dto.ItemResponse;
+import br.hackathon.com.example.almoxarifado_compartilhado.item.entity.Item;
 import br.hackathon.com.example.almoxarifado_compartilhado.exception.ItemNotFoundException;
-import br.hackathon.com.example.almoxarifado_compartilhado.repository.ItemRepository;
+import br.hackathon.com.example.almoxarifado_compartilhado.item.repository.ItemRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
