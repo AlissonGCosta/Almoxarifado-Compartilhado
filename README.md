@@ -100,6 +100,29 @@ Pré-requisitos:
 
 - Java 21
 - Maven 3.x
+- Docker
+- Docker Compose
+
+Suba o PostgreSQL local:
+
+```bash
+docker compose up -d
+```
+
+Se o Docker Compose estiver instalado como binário legado:
+
+```bash
+docker-compose up -d
+```
+
+Valores padrão de desenvolvimento:
+
+| Variável | Valor |
+| --- | --- |
+| `POSTGRES_DB` | `almoxarifado` |
+| `POSTGRES_USER` | `almoxarifado` |
+| `POSTGRES_PASSWORD` | `almoxarifado` |
+| `POSTGRES_PORT` | `5432` |
 
 Instale as dependências e execute a aplicação:
 
