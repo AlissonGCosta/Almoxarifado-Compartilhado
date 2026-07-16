@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
-CREATE TABLE pedido_compra (
+CREATE TABLE pedidos_compra (
     id_pedido_compra UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     id_produto UUID NOT NULL,
     nome_produto VARCHAR(255) NOT NULL,
@@ -14,15 +14,15 @@ CREATE TABLE pedido_compra (
     motivo_cancelamento TEXT,
     data_criacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     data_atualizacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_pedido_compra_produto FOREIGN KEY (id_produto) REFERENCES item (id),
-    CONSTRAINT fk_pedido_compra_usuario FOREIGN KEY (id_usuario) REFERENCES users (id),
-    CONSTRAINT fk_pedido_compra_secretaria FOREIGN KEY (id_secretaria) REFERENCES secretarias (id),
-    CONSTRAINT ck_pedido_compra_cancelamento CHECK (
+    CONSTRAINT fk_pedidos_compra_produto FOREIGN KEY (id_produto) REFERENCES item (id),
+    CONSTRAINT fk_pedidos_compra_usuario FOREIGN KEY (id_usuario) REFERENCES users (id),
+    CONSTRAINT fk_pedidos_compra_secretaria FOREIGN KEY (id_secretaria) REFERENCES secretarias (id),
+    CONSTRAINT ck_pedidos_compra_cancelamento CHECK (
         (status = 'CANCELADO' AND motivo_cancelamento IS NOT NULL)
         OR (status <> 'CANCELADO' AND motivo_cancelamento IS NULL)
     )
 );
 
-CREATE INDEX idx_pedido_compra_status ON pedido_compra (status);
-CREATE INDEX idx_pedido_compra_id_usuario ON pedido_compra (id_usuario);
-CREATE INDEX idx_pedido_compra_id_secretaria ON pedido_compra (id_secretaria);
+CREATE INDEX idx_pedidos_compra_status ON pedidos_compra (status);
+CREATE INDEX idx_pedidos_compra_id_usuario ON pedidos_compra (id_usuario);
+CREATE INDEX idx_pedidos_compra_id_secretaria ON pedidos_compra (id_secretaria);

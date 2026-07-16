@@ -28,7 +28,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "pedido_compra")
+@Table(name = "pedidos_compra")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
