@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ItemService {
@@ -42,14 +43,14 @@ public class ItemService {
     }
 
 
-    public Optional<ItemResponse> findItemById(Long id) {
+    public Optional<ItemResponse> findItemById(UUID id) {
 
         return itemRepository.findById(id)
                 .map(this::toResponse);
     }
 
 
-    public ItemResponse updateItem(Long id, ItemRequest request) {
+    public ItemResponse updateItem(UUID id, ItemRequest request) {
 
         Item item = itemRepository.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException(id));
@@ -64,7 +65,7 @@ public class ItemService {
     }
 
 
-    public void deleteItem(Long id) {
+    public void deleteItem(UUID id) {
 
         if (!itemRepository.existsById(id)) {
             throw new ItemNotFoundException(id);

@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @Tag(
         name = "Itens",
@@ -39,7 +40,7 @@ public class ItemController {
 
     @Operation(summary = "Buscar um item pelo ID")
     @GetMapping("/{id}")
-    public ResponseEntity<ItemResponse> getItemById(@PathVariable Long id) {
+    public ResponseEntity<ItemResponse> getItemById(@PathVariable UUID id) {
         return itemService.findItemById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -48,7 +49,7 @@ public class ItemController {
     @Operation(summary = "Atualizar um item")
     @PutMapping("/{id}")
     public ResponseEntity<ItemResponse> updateItem(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @Valid @RequestBody ItemRequest request) {
 
         return ResponseEntity.ok(itemService.updateItem(id, request));
@@ -56,7 +57,7 @@ public class ItemController {
 
     @Operation(summary = "Excluir um item")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteItem(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteItem(@PathVariable UUID id) {
         itemService.deleteItem(id);
         return ResponseEntity.noContent().build();
     }
