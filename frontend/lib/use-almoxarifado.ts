@@ -30,6 +30,8 @@ export function useAlmoxarifado() {
   const [notice, setNotice] = useState("Conectando aos serviços do almoxarifado.");
   const [query, setQuery] = useState("");
   const [pedidoStatusFilter, setPedidoStatusFilter] = useState<PedidoStatusFilter>("TODOS");
+  const [editingSecretariaId, setEditingSecretariaId] = useState<string | null>(null);
+  const [editingUsuarioId, setEditingUsuarioId] = useState<string | null>(null);
 
   const [itemForm, setItemForm] = useState<ItemForm>({
     name: "",
@@ -264,6 +266,55 @@ export function useAlmoxarifado() {
       return;
     }
 
+    if (editingSecretariaId) {
+      const previousSecretaria = secretarias.find((secretaria) => secretaria.id === editingSecretariaId);
+      const updatedSecretaria = {
+        ...previousSecretaria,
+        ...payload,
+        id: editingSecretariaId,
+        updatedAt: new Date().toISOString().slice(0, 10),
+      };
+
+      try {
+        await backendRequest<void>(`/v1/secretarias/${editingSecretariaId}`, {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
+
+        setApiMode("sincronizado");
+        setNotice("Secretaria atualizada na API.");
+      } catch (error) {
+        setApiMode("local");
+        setNotice(
+          error instanceof Error
+            ? `${error.message} Secretaria atualizada localmente.`
+            : "Secretaria atualizada localmente.",
+        );
+      }
+
+      setSecretarias((current) =>
+        current.map((secretaria) => (secretaria.id === editingSecretariaId ? updatedSecretaria : secretaria)),
+      );
+
+      if (previousSecretaria?.sigla && previousSecretaria.sigla !== payload.sigla) {
+        setUsuarios((current) =>
+          current.map((usuario) =>
+            usuario.siglaSecretaria === previousSecretaria.sigla
+              ? { ...usuario, siglaSecretaria: payload.sigla }
+              : usuario,
+          ),
+        );
+        setUsuarioForm((current) => ({
+          ...current,
+          siglaSecretaria: current.siglaSecretaria === previousSecretaria.sigla ? payload.sigla : current.siglaSecretaria,
+        }));
+      }
+
+      setEditingSecretariaId(null);
+      setSecretariaForm({ nome: "", sigla: "", endereco: "", cep: "" });
+      return;
+    }
+
     try {
       const created = await backendRequest<Secretaria>("/v1/secretarias", {
         method: "POST",
@@ -289,8 +340,67 @@ export function useAlmoxarifado() {
     setSecretariaForm({ nome: "", sigla: "", endereco: "", cep: "" });
   }
 
+  function handleEditSecretaria(secretaria: Secretaria) {
+    setEditingSecretariaId(secretaria.id);
+    setSecretariaForm({
+      nome: secretaria.nome,
+      sigla: secretaria.sigla,
+      endereco: secretaria.endereco,
+      cep: secretaria.cep,
+    });
+    setNotice("Editando secretaria selecionada.");
+  }
+
+  function handleCancelSecretariaEdit() {
+    setEditingSecretariaId(null);
+    setSecretariaForm({ nome: "", sigla: "", endereco: "", cep: "" });
+    setNotice("Edição de secretaria cancelada.");
+  }
+
   async function handleCreateUsuario(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (editingUsuarioId) {
+      const payload = {
+        nome: usuarioForm.nome.trim(),
+        email: usuarioForm.email.trim(),
+      };
+
+      if (!payload.nome || !payload.email) {
+        setNotice("Preencha nome e e-mail do usuário.");
+        return;
+      }
+
+      try {
+        await backendRequest<{ nome: string; email: string }>(`/v1/users/${editingUsuarioId}`, {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
+
+        setApiMode("sincronizado");
+        setNotice("Usuário atualizado na API.");
+      } catch (error) {
+        setApiMode("local");
+        setNotice(
+          error instanceof Error
+            ? `${error.message} Usuário atualizado localmente.`
+            : "Usuário atualizado localmente.",
+        );
+      }
+
+      setUsuarios((current) =>
+        current.map((usuario) => (usuario.id === editingUsuarioId ? { ...usuario, ...payload } : usuario)),
+      );
+      setEditingUsuarioId(null);
+      setUsuarioForm({
+        siglaSecretaria: secretarias[0]?.sigla ?? "",
+        nome: "",
+        email: "",
+        cpf: "",
+        senha: "",
+      });
+      return;
+    }
 
     const payload = {
       siglaSecretaria: usuarioForm.siglaSecretaria,
@@ -337,6 +447,30 @@ export function useAlmoxarifado() {
       cpf: "",
       senha: "",
     });
+  }
+
+  function handleEditUsuario(usuario: Usuario) {
+    setEditingUsuarioId(usuario.id);
+    setUsuarioForm({
+      siglaSecretaria: usuario.siglaSecretaria,
+      nome: usuario.nome,
+      email: usuario.email,
+      cpf: "",
+      senha: "",
+    });
+    setNotice("Editando usuário selecionado. O back-end permite alterar apenas nome e e-mail.");
+  }
+
+  function handleCancelUsuarioEdit() {
+    setEditingUsuarioId(null);
+    setUsuarioForm({
+      siglaSecretaria: secretarias[0]?.sigla ?? "",
+      nome: "",
+      email: "",
+      cpf: "",
+      senha: "",
+    });
+    setNotice("Edição de usuário cancelada.");
   }
 
   function handlePedidoProdutoChange(idProduto: string) {
@@ -428,15 +562,21 @@ export function useAlmoxarifado() {
   return {
     activeTab,
     apiStatusLabel,
+    editingSecretariaId,
+    editingUsuarioId,
     filteredItems,
     filteredPedidos,
     filteredSecretarias,
     filteredUsuarios,
+    handleCancelSecretariaEdit,
+    handleCancelUsuarioEdit,
     handleCreateItem,
     handleCreatePedido,
     handleCreateSecretaria,
     handleCreateUsuario,
     handleDeletePedido,
+    handleEditSecretaria,
+    handleEditUsuario,
     handlePedidoProdutoChange,
     itemForm,
     items,

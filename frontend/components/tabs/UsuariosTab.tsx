@@ -6,23 +6,28 @@ export function UsuariosTab({ app }: { app: AlmoxarifadoViewModel }) {
   return (
     <section className="form-page-grid">
       <form onSubmit={app.handleCreateUsuario} className="rounded border border-[#cbd8d0] bg-white">
-        <SectionHeader title="Cadastro de usuário" subtitle="Controle de acesso" />
+        <SectionHeader
+          title={app.editingUsuarioId ? "Editar usuário" : "Cadastro de usuário"}
+          subtitle={app.editingUsuarioId ? "Atualização de nome e e-mail" : "Controle de acesso"}
+        />
         <div className="grid gap-4 p-4 md:grid-cols-2">
-          <Field label="Secretaria">
-            <select
-              value={app.usuarioForm.siglaSecretaria}
-              onChange={(event) =>
-                app.setUsuarioForm((current) => ({ ...current, siglaSecretaria: event.target.value }))
-              }
-              className="form-input"
-            >
-              {app.secretarias.map((secretaria) => (
-                <option key={secretaria.id} value={secretaria.sigla}>
-                  {secretaria.sigla} - {secretaria.nome}
-                </option>
-              ))}
-            </select>
-          </Field>
+          {!app.editingUsuarioId && (
+            <Field label="Secretaria">
+              <select
+                value={app.usuarioForm.siglaSecretaria}
+                onChange={(event) =>
+                  app.setUsuarioForm((current) => ({ ...current, siglaSecretaria: event.target.value }))
+                }
+                className="form-input"
+              >
+                {app.secretarias.map((secretaria) => (
+                  <option key={secretaria.id} value={secretaria.sigla}>
+                    {secretaria.sigla} - {secretaria.nome}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
           <Field label="Nome">
             <input
               value={app.usuarioForm.nome}
@@ -40,31 +45,46 @@ export function UsuariosTab({ app }: { app: AlmoxarifadoViewModel }) {
               type="email"
             />
           </Field>
-          <Field label="CPF">
-            <input
-              value={app.usuarioForm.cpf}
-              onChange={(event) => app.setUsuarioForm((current) => ({ ...current, cpf: event.target.value }))}
-              className="form-input"
-              placeholder="00000000000"
-            />
-          </Field>
-          <Field label="Senha">
-            <input
-              value={app.usuarioForm.senha}
-              onChange={(event) => app.setUsuarioForm((current) => ({ ...current, senha: event.target.value }))}
-              className="form-input"
-              minLength={8}
-              maxLength={32}
-              type="password"
-              placeholder="Mínimo de 8 caracteres"
-            />
-          </Field>
-          <button
-            className="h-11 self-end rounded bg-[#1f6b4f] px-4 text-sm font-bold text-white hover:bg-[#173f35]"
-            type="submit"
-          >
-            Cadastrar usuário
-          </button>
+          {!app.editingUsuarioId && (
+            <>
+              <Field label="CPF">
+                <input
+                  value={app.usuarioForm.cpf}
+                  onChange={(event) => app.setUsuarioForm((current) => ({ ...current, cpf: event.target.value }))}
+                  className="form-input"
+                  placeholder="00000000000"
+                />
+              </Field>
+              <Field label="Senha">
+                <input
+                  value={app.usuarioForm.senha}
+                  onChange={(event) => app.setUsuarioForm((current) => ({ ...current, senha: event.target.value }))}
+                  className="form-input"
+                  minLength={8}
+                  maxLength={32}
+                  type="password"
+                  placeholder="Mínimo de 8 caracteres"
+                />
+              </Field>
+            </>
+          )}
+          <div className="grid gap-3 md:col-span-2 sm:grid-cols-[1fr_auto]">
+            <button
+              className="h-11 rounded bg-[#1f6b4f] px-4 text-sm font-bold text-white hover:bg-[#173f35]"
+              type="submit"
+            >
+              {app.editingUsuarioId ? "Salvar alterações" : "Cadastrar usuário"}
+            </button>
+            {app.editingUsuarioId && (
+              <button
+                onClick={app.handleCancelUsuarioEdit}
+                className="h-11 rounded border border-[#b9c8be] bg-white px-4 text-sm font-bold text-[#27443a] hover:bg-[#f1f5f2]"
+                type="button"
+              >
+                Cancelar
+              </button>
+            )}
+          </div>
         </div>
       </form>
 
@@ -87,6 +107,13 @@ export function UsuariosTab({ app }: { app: AlmoxarifadoViewModel }) {
                   <span className="rounded border border-[#d5b35c] bg-[#fff7db] px-3 py-1 text-xs font-bold text-[#6d5510]">
                     {formatDate(usuario.createdAt ?? usuario.creatAt)}
                   </span>
+                  <button
+                    onClick={() => app.handleEditUsuario(usuario)}
+                    className="h-8 rounded border border-[#b9c8be] bg-white px-3 text-xs font-bold text-[#173f35] hover:bg-[#f1f5f2]"
+                    type="button"
+                  >
+                    Editar
+                  </button>
                 </div>
               </div>
             </article>

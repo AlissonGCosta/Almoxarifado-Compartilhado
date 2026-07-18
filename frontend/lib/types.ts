@@ -32,6 +32,7 @@ export type Secretaria = {
   cep: string;
   createAt?: string;
   createdAt?: string;
+  updatedAt?: string;
 };
 
 export type Usuario = {

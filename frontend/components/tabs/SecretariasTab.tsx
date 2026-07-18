@@ -6,7 +6,10 @@ export function SecretariasTab({ app }: { app: AlmoxarifadoViewModel }) {
   return (
     <section className="form-page-grid">
       <form onSubmit={app.handleCreateSecretaria} className="rounded border border-[#cbd8d0] bg-white">
-        <SectionHeader title="Cadastro de secretaria" subtitle="Cadastro municipal" />
+        <SectionHeader
+          title={app.editingSecretariaId ? "Editar secretaria" : "Cadastro de secretaria"}
+          subtitle={app.editingSecretariaId ? "Atualização do cadastro municipal" : "Cadastro municipal"}
+        />
         <div className="grid gap-4 p-4 md:grid-cols-[minmax(0,1fr)_180px]">
           <Field label="Nome">
             <input
@@ -41,24 +44,36 @@ export function SecretariasTab({ app }: { app: AlmoxarifadoViewModel }) {
               placeholder="00000-000"
             />
           </Field>
-          <button
-            className="h-11 rounded bg-[#1f6b4f] px-4 text-sm font-bold text-white hover:bg-[#173f35] md:col-span-2"
-            type="submit"
-          >
-            Cadastrar secretaria
-          </button>
+          <div className="grid gap-3 md:col-span-2 sm:grid-cols-[1fr_auto]">
+            <button
+              className="h-11 rounded bg-[#1f6b4f] px-4 text-sm font-bold text-white hover:bg-[#173f35]"
+              type="submit"
+            >
+              {app.editingSecretariaId ? "Salvar alterações" : "Cadastrar secretaria"}
+            </button>
+            {app.editingSecretariaId && (
+              <button
+                onClick={app.handleCancelSecretariaEdit}
+                className="h-11 rounded border border-[#b9c8be] bg-white px-4 text-sm font-bold text-[#27443a] hover:bg-[#f1f5f2]"
+                type="button"
+              >
+                Cancelar
+              </button>
+            )}
+          </div>
         </div>
       </form>
 
       <DataPanel title="Secretarias cadastradas" subtitle={`${app.filteredSecretarias.length} registros`}>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+          <table className="w-full min-w-[840px] border-collapse text-left text-sm">
             <thead className="bg-[#eef5f1] text-[#315245]">
               <tr>
                 <th className="px-4 py-3 font-semibold">Sigla</th>
                 <th className="px-4 py-3 font-semibold">Nome</th>
                 <th className="px-4 py-3 font-semibold">Endereço</th>
                 <th className="px-4 py-3 font-semibold">Cadastro</th>
+                <th className="px-4 py-3 text-right font-semibold">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -68,6 +83,15 @@ export function SecretariasTab({ app }: { app: AlmoxarifadoViewModel }) {
                   <td className="px-4 py-3">{secretaria.nome}</td>
                   <td className="px-4 py-3 text-[#53645c]">{secretaria.endereco}</td>
                   <td className="px-4 py-3 text-[#53645c]">{formatDate(secretaria.createdAt ?? secretaria.createAt)}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => app.handleEditSecretaria(secretaria)}
+                      className="h-9 rounded border border-[#b9c8be] bg-white px-3 text-sm font-bold text-[#173f35] hover:bg-[#f1f5f2]"
+                      type="button"
+                    >
+                      Editar
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
