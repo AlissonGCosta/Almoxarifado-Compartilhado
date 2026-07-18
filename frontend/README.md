@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Front-end - Almoxarifado Compartilhado
 
-## Getting Started
+Interface web do sistema de gestão municipal de bens e materiais.
 
-First, run the development server:
+O front-end usa Next.js com App Router, TypeScript, Tailwind CSS e ESLint.
+
+## Funcionalidades atuais
+
+- Painel com indicadores gerais do almoxarifado.
+- Cadastro e listagem de itens.
+- Cadastro, listagem e edição de secretarias.
+- Cadastro, listagem e edição parcial de usuários.
+- Cadastro, listagem, filtro por status e remoção de pedidos de compra.
+- Tela de acesso preparada para autenticação futura.
+- Tela de planejamento com pontos pendentes de integração.
+- Fallback local quando a API não responde ou alguma rota ainda está indisponível.
+
+## Integração com a API
+
+As chamadas do navegador passam pelo proxy interno do Next:
+
+```text
+/api/backend/*
+```
+
+Por padrão, esse proxy aponta para:
+
+```text
+http://localhost:8080
+```
+
+Para alterar o destino da API, defina a variável:
+
+```env
+BACKEND_URL=http://localhost:8080
+```
+
+## Limitações conhecidas
+
+- Login real ainda depende da API de autenticação.
+- Itens ainda podem cair em modo local se a rota `/items` estiver bloqueada.
+- Edição de usuários altera apenas `nome` e `email`, conforme o contrato atual da API.
+- Algumas regras de negócio de pedidos ainda dependem da definição final do back-end.
+
+## Requisitos
+
+- Node.js
+- npm
+
+As versões exatas das dependências ficam registradas em `package-lock.json`.
+
+## Como rodar
+
+Instale as dependências:
+
+```bash
+npm ci
+```
+
+Inicie o servidor de desenvolvimento:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Estrutura principal
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```text
+app/
+  api/backend/[...path]/route.ts
+  page.tsx
+components/
+  tabs/
+  AppHeader.tsx
+  AppFooter.tsx
+  NoticeBar.tsx
+  ui.tsx
+lib/
+  api.ts
+  formatters.ts
+  mock-data.ts
+  types.ts
+  use-almoxarifado.ts
+```
