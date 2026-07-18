@@ -1,7 +1,9 @@
 package br.hackathon.com.example.almoxarifado_compartilhado.users.controller;
 
 import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.request.UserRequestDto;
+import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.request.UserRequestPutDto;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.response.UserResponseDto;
+import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.response.UserResponsePutDto;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.entity.mapper.UserMapper;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.service.UserService;
 import jakarta.validation.Valid;
@@ -11,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("v1/users")
@@ -32,6 +35,15 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     public List<UserResponseDto> listarUsers() {
         return userService.listarUsuarios();
+    }
+
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponsePutDto putUsers(@PathVariable UUID id, @RequestBody @Valid UserRequestPutDto dto) {
+
+        userService.alterarUsuarios(id, dto);
+
+        return userMapper.toResponsePutDto(dto);
     }
 
 }
