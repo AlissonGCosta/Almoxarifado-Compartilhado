@@ -1,6 +1,7 @@
 "use client";
 
 import { AppHeader } from "@/components/AppHeader";
+import { AppFooter } from "@/components/AppFooter";
 import { NoticeBar } from "@/components/NoticeBar";
 import { AcessoTab } from "@/components/tabs/AcessoTab";
 import { DashboardTab } from "@/components/tabs/DashboardTab";
@@ -34,6 +35,8 @@ export default function Home() {
         {app.activeTab === "acesso" && <AcessoTab />}
         {app.activeTab === "planejamento" && <PlanejamentoTab />}
       </div>
+
+      <AppFooter />
     </main>
   );
 }
