@@ -2,13 +2,12 @@ package br.hackathon.com.example.almoxarifado_compartilhado.secretaria.entity.ma
 
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.dto.request.SecretariaRequestDto;
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.dto.response.SecretariaResponseDto;
+import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.entity.SecretariaEntity;
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.repository.SecretariasRepository;
-import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.service.SecretariaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.Locale;
 import java.util.UUID;
 
 @Component
@@ -22,6 +21,7 @@ public class SecretariaMapper {
 
         UUID novoId = secretariasRepository.findBySigla(dto.sigla()).get().getId();
         LocalDate dataCriada = secretariasRepository.findBySigla(dto.sigla()).get().getCreatedAt();
+        LocalDate update = secretariasRepository.findBySigla(dto.sigla()).get().getUpdatedAt();
 
         return new SecretariaResponseDto(
                 novoId,
@@ -29,8 +29,26 @@ public class SecretariaMapper {
                 dto.sigla().toUpperCase(),
                 dto.endereco(),
                 dto.cep(),
-                dataCriada
+                dataCriada,
+                update
 
         );
     }
+
+    public SecretariaResponseDto toResponseEntity(SecretariaEntity dto) {
+
+        return new SecretariaResponseDto(
+                dto.getId(),
+                dto.getNome(),
+                dto.getSigla(),
+                dto.getEndereco(),
+                dto.getCep(),
+                dto.getCreatedAt(),
+                dto.getUpdatedAt()
+
+        );
+    }
+
+
+
 }

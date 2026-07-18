@@ -1,9 +1,11 @@
 package br.hackathon.com.example.almoxarifado_compartilhado.secretaria.service;
 
 import br.hackathon.com.example.almoxarifado_compartilhado.exception.ConflictException;
+import br.hackathon.com.example.almoxarifado_compartilhado.exception.RessourceNotFoundException;
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.dto.request.SecretariaRequestDto;
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.dto.response.SecretariaResponseDto;
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.entity.SecretariaEntity;
+import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.entity.mapper.SecretariaMapper;
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.repository.SecretariasRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -11,12 +13,14 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class SecretariaService {
 
     private final SecretariasRepository secretariasRepository;
+    private final SecretariaMapper mapper;
 
     // CRIANDO A SECRETARIA E VALIDANDO SE É A UNICA EM BANCO
     public void criarSecretaria(SecretariaRequestDto dto){
@@ -51,7 +55,29 @@ public class SecretariaService {
                        secretaria.getSigla(),
                        secretaria.getEndereco(),
                        secretaria.getCep(),
-                       secretaria.getCreatedAt()
+                       secretaria.getCreatedAt(),
+                       secretaria.getUpdatedAt()
                )).toList();
    }
+
+
+   // Metodo para alterar a secretaria por completo
+    public SecretariaResponseDto alterarSecretaria(SecretariaRequestDto dto, UUID id){
+
+     SecretariaEntity novaSecretaria =  secretariasRepository.findById(id)
+             .orElseThrow(() -> new RessourceNotFoundException("secretaria não encontrada"));
+
+     novaSecretaria.setNome(dto.nome());
+     novaSecretaria.setSigla(dto.sigla());
+     novaSecretaria.setEndereco(dto.endereco());
+     novaSecretaria.setCep(dto.cep());
+     novaSecretaria.setUpdatedAt(LocalDate.now());
+
+     secretariasRepository.save(novaSecretaria);
+
+    return mapper.toResponseEntity(novaSecretaria);
+    }
+
+
+
 }
