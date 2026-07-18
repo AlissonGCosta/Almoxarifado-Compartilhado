@@ -10,6 +10,7 @@ public record SecretariaResponseDto(
         String sigla,
         String endereco,
         String cep,
-        LocalDate createAt
+        LocalDate createAt,
+        LocalDate updatedAt
 ) {
 }

@@ -11,6 +11,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("v1/secretarias")
@@ -35,7 +36,21 @@ public class SecretariaController {
     // METODO PARA LISTAR TODAS AS SECRETARIAS CADASTRADAS
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<SecretariaResponseDto> listarSecretarias(){
+    public List<SecretariaResponseDto> listarSecretarias() {
         return secretariaService.listarSecretarias();
     }
+
+
+    // METODO PARA ALTERAR Secretarua
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public void putSecretarias(@PathVariable UUID id, @RequestBody @Valid SecretariaRequestDto dto) {
+
+        secretariaService.alterarSecretaria(dto, id);
+
+    }
+
 }
+
+
+

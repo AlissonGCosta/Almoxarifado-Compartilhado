@@ -1,7 +1,9 @@
 package br.hackathon.com.example.almoxarifado_compartilhado.users.entity.mapper;
 
 import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.request.UserRequestDto;
+import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.request.UserRequestPutDto;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.response.UserResponseDto;
+import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.response.UserResponsePutDto;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.entity.UserEntity;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.entity.usersEnum.UserEnum;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.repository.UserRepository;
@@ -31,6 +33,13 @@ public class UserMapper {
                 userDate,
                 userEnum.name()
 
+        );
+    }
+
+    public UserResponsePutDto toResponsePutDto(UserRequestPutDto dto) {
+        return new UserResponsePutDto(
+             dto.nome(),
+             dto.email()
         );
     }
 }

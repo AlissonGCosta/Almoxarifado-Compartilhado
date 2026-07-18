@@ -6,15 +6,19 @@ import br.hackathon.com.example.almoxarifado_compartilhado.exception.RessourceNo
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.entity.SecretariaEntity;
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.repository.SecretariasRepository;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.request.UserRequestDto;
+import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.request.UserRequestPutDto;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.response.UserResponseDto;
+import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.response.UserResponsePutDto;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.entity.UserEntity;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.entity.usersEnum.UserEnum;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.repository.UserRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -47,7 +51,7 @@ public class UserService {
 
     public List<UserResponseDto> listarUsuarios(){
 
-      return   userRepository.findAll().stream()
+      return userRepository.findAll().stream()
                 .map(usuarios -> new UserResponseDto(
                         usuarios.getId(),
                         usuarios.getSecretaria().getSigla(),
@@ -57,5 +61,16 @@ public class UserService {
                         usuarios.getRoles().name()
 
                 )).toList();
+    }
+    public void alterarUsuarios(UUID id, UserRequestPutDto dto) {
+
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("usuario não encontrado"));
+
+        user.setNome(dto.nome());
+        user.setEmail(dto.email());
+
+        userRepository.save(user);
+
     }
 }
