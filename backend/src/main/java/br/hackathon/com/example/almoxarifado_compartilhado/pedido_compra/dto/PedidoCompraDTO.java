@@ -1,6 +1,6 @@
-package br.hackathon.com.example.almoxarifado_compartilhado.dto;
+package br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.dto;
 
-import br.hackathon.com.example.almoxarifado_compartilhado.model.PedidoStatus;
+import br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.model.PedidoStatus;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
