@@ -1,8 +1,8 @@
-package br.hackathon.com.example.almoxarifado_compartilhado.controller;
+package br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.controller;
 
-import br.hackathon.com.example.almoxarifado_compartilhado.dto.PedidoCompraDTO;
-import br.hackathon.com.example.almoxarifado_compartilhado.model.PedidoStatus;
-import br.hackathon.com.example.almoxarifado_compartilhado.service.PedidoCompraService;
+import br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.dto.PedidoCompraDTO;
+import br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.model.PedidoStatus;
+import br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.service.PedidoCompraService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/pedidos-compra")
+@RequestMapping("/v1/pedidos-compra")
 @RequiredArgsConstructor
 @Tag(name = "Pedidos de Compra", description = "Gerenciamento de pedidos de compra")
 public class PedidoCompraController {
