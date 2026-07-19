@@ -1,7 +1,7 @@
-package br.hackathon.com.example.almoxarifado_compartilhado.repository;
+package br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.repository;
 
-import br.hackathon.com.example.almoxarifado_compartilhado.model.PedidoCompra;
-import br.hackathon.com.example.almoxarifado_compartilhado.model.PedidoStatus;
+import br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.model.PedidoCompra;
+import br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.model.PedidoStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,13 +1,13 @@
-package br.hackathon.com.example.almoxarifado_compartilhado.service;
+package br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.service;
 
-import br.hackathon.com.example.almoxarifado_compartilhado.dto.PedidoCompraDTO;
+import br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.dto.PedidoCompraDTO;
 import br.hackathon.com.example.almoxarifado_compartilhado.exception.BusinessException;
 import br.hackathon.com.example.almoxarifado_compartilhado.exception.RessourceNotFoundException;
 import br.hackathon.com.example.almoxarifado_compartilhado.item.entity.Item;
 import br.hackathon.com.example.almoxarifado_compartilhado.item.repository.ItemRepository;
-import br.hackathon.com.example.almoxarifado_compartilhado.model.PedidoCompra;
-import br.hackathon.com.example.almoxarifado_compartilhado.model.PedidoStatus;
-import br.hackathon.com.example.almoxarifado_compartilhado.repository.PedidoCompraRepository;
+import br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.model.PedidoCompra;
+import br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.model.PedidoStatus;
+import br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.repository.PedidoCompraRepository;
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.entity.SecretariaEntity;
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.repository.SecretariasRepository;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.entity.UserEntity;

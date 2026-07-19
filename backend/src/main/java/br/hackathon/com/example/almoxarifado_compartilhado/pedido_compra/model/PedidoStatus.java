@@ -1,4 +1,4 @@
-package br.hackathon.com.example.almoxarifado_compartilhado.model;
+package br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.model;
 
 import lombok.Getter;
 

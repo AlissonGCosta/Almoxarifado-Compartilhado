@@ -1,4 +1,4 @@
-package br.hackathon.com.example.almoxarifado_compartilhado.model;
+package br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.model;
 
 import br.hackathon.com.example.almoxarifado_compartilhado.item.entity.Item;
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.entity.SecretariaEntity;
