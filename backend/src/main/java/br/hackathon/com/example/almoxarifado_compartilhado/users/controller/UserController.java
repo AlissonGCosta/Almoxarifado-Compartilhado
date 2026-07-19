@@ -1,6 +1,7 @@
 package br.hackathon.com.example.almoxarifado_compartilhado.users.controller;
 
 import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.request.UserRequestDto;
+import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.request.UserRequestPasswordDto;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.request.UserRequestPutDto;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.response.UserResponseDto;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.response.UserResponsePutDto;
@@ -44,6 +45,15 @@ public class UserController {
         userService.alterarUsuarios(id, dto);
 
         return userMapper.toResponsePutDto(dto);
+    }
+
+    @PatchMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public String alterarSenha(@PathVariable UUID id, @RequestBody @Valid UserRequestPasswordDto dto) {
+
+        userService.alterarSenha(id, dto);
+
+        return "senha alterada com sucesso";
     }
 
 }
