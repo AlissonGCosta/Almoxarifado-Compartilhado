@@ -1,18 +1,16 @@
 package br.hackathon.com.example.almoxarifado_compartilhado.users.service;
 
 import br.hackathon.com.example.almoxarifado_compartilhado.config.PasswordConfig;
-import br.hackathon.com.example.almoxarifado_compartilhado.exception.ItemNotFoundException;
+import br.hackathon.com.example.almoxarifado_compartilhado.exception.BusinessException;
 import br.hackathon.com.example.almoxarifado_compartilhado.exception.RessourceNotFoundException;
-import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.entity.SecretariaEntity;
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.repository.SecretariasRepository;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.request.UserRequestDto;
+import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.request.UserRequestPasswordDto;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.request.UserRequestPutDto;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.response.UserResponseDto;
-import br.hackathon.com.example.almoxarifado_compartilhado.users.dto.response.UserResponsePutDto;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.entity.UserEntity;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.entity.usersEnum.UserEnum;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.repository.UserRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -69,6 +67,21 @@ public class UserService {
 
         user.setNome(dto.nome());
         user.setEmail(dto.email());
+
+        userRepository.save(user);
+
+    }
+
+    public void alterarSenha(UUID id, UserRequestPasswordDto dto) {
+
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new RessourceNotFoundException("usuario n?o encontrad" + id));
+
+        if(!passwordConfig.passwordEncoder().matches(dto.senhaAtual(),  user.getSenha())) {
+            throw new BusinessException("senha antiga n?o reconhecida");
+        }
+
+        user.setSenha(passwordConfig.passwordEncoder().encode(dto.senhaNova()));
 
         userRepository.save(user);
 
