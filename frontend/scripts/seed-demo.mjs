@@ -56,18 +56,27 @@ async function seed() {
   );
 
   const usuarios = await request("/v1/users");
-  const usuario = await findOrCreate(
-    "/v1/users",
-    usuarios,
-    (item) => item.email === demo.email,
-    {
-      siglaSecretaria: demo.secretariaSigla,
-      nome: "Servidor de Demonstração",
-      email: demo.email,
-      cpf: demo.cpf,
-      senha: demo.password,
-    },
-  );
+  const usuarioExistente = usuarios.find((item) => item.email === demo.email);
+  let usuario;
+
+  if (usuarioExistente) {
+    await request(`/v1/users/${usuarioExistente.id}`, {
+      method: "PUT",
+      body: JSON.stringify({ nome: "Demonstração", email: demo.email }),
+    });
+    usuario = { ...usuarioExistente, nome: "Demonstração" };
+  } else {
+    usuario = await request("/v1/users", {
+      method: "POST",
+      body: JSON.stringify({
+        siglaSecretaria: demo.secretariaSigla,
+        nome: "Demonstração",
+        email: demo.email,
+        cpf: demo.cpf,
+        senha: demo.password,
+      }),
+    });
+  }
 
   const produtosAtuais = await request("/v1/produtos");
   const produtosBase = [

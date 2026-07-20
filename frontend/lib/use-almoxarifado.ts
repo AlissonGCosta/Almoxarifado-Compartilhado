@@ -147,6 +147,7 @@ export function useAlmoxarifado() {
       return;
     }
 
+    const currentSession = authSession;
     let ignore = false;
 
     async function loadData() {
@@ -256,6 +257,13 @@ export function useAlmoxarifado() {
       if (usuariosResult.status === "fulfilled") {
         setUsuarios(usuariosResult.value);
         const primeiroUsuario = usuariosResult.value[0];
+        const usuarioDaSessao = usuariosResult.value.find((usuario) => usuario.email === currentSession.email);
+
+        if (usuarioDaSessao?.nome && usuarioDaSessao.nome !== currentSession.name) {
+          const sessaoAtualizada = { ...currentSession, name: usuarioDaSessao.nome };
+          saveAuthSession(sessaoAtualizada);
+          setAuthSession(sessaoAtualizada);
+        }
 
         setProdutoForm((current) => ({
           ...current,

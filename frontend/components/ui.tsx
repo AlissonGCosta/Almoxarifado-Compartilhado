@@ -12,13 +12,14 @@ export function Metric({
   tone?: "default" | "warn";
 }) {
   return (
-    <article className="rounded border border-[#cbd8d0] bg-white p-5">
-      <p className="text-sm font-semibold text-[#53645c]">{title}</p>
-      <div className="mt-3 flex items-end justify-between gap-4">
-        <strong className={`text-4xl font-black ${tone === "warn" ? "text-[#986b00]" : "text-[#173f35]"}`}>
+    <article className="min-h-32 rounded-lg border border-[#30323d] bg-[#171821] p-4">
+      <span className={`block h-1 w-8 rounded-full ${tone === "warn" ? "bg-[#feb95a]" : "bg-[#a9dfd8]"}`} />
+      <p className="mt-4 text-xs font-semibold text-[#9a9ba4]">{title}</p>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <strong className={`text-3xl font-black ${tone === "warn" ? "text-[#feb95a]" : "text-white"}`}>
           {value}
         </strong>
-        <span className="text-right text-sm font-semibold text-[#315245]">{note}</span>
+        <span className="max-w-28 text-right text-xs font-semibold leading-5 text-[#a9dfd8]">{note}</span>
       </div>
     </article>
   );
@@ -26,9 +27,9 @@ export function Metric({
 
 export function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <header className="border-b border-[#e1e8e4] px-4 py-4">
-      <h2 className="text-lg font-bold text-[#10241e]">{title}</h2>
-      <p className="mt-1 text-sm text-[#53645c]">{subtitle}</p>
+    <header className="border-b border-[#30323d] px-4 py-4 sm:px-5">
+      <h2 className="text-base font-bold text-white">{title}</h2>
+      <p className="mt-1 text-xs text-[#9a9ba4]">{subtitle}</p>
     </header>
   );
 }
@@ -43,7 +44,7 @@ export function DataPanel({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded border border-[#cbd8d0] bg-white">
+    <section className="app-panel rounded-lg border border-[#30323d] bg-[#21222d]">
       <SectionHeader title={title} subtitle={subtitle} />
       <div className="p-4">{children}</div>
     </section>
@@ -61,7 +62,7 @@ export function Field({
 }) {
   return (
     <label className={`grid gap-2 ${className}`.trim()}>
-      <span className="text-sm font-bold text-[#315245]">{label}</span>
+      <span className="text-xs font-bold text-[#c9c9cf]">{label}</span>
       {children}
     </label>
   );

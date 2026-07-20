@@ -2,13 +2,15 @@
 
 Interface web do sistema de gestão municipal de bens e materiais.
 
-O front-end usa Next.js com App Router, TypeScript, Tailwind CSS e ESLint.
+O front-end usa Next.js com App Router, TypeScript, Tailwind CSS, Lucide Icons e ESLint.
 
 ## Funcionalidades
 
 - Login com JWT e sessão mantida enquanto a aba do navegador estiver aberta.
+- Tela de autenticação exclusiva, sem a navegação do ambiente interno.
 - Envio automático do Bearer token nas chamadas para a API.
 - Perfil do usuário e alteração de senha.
+- Interface administrativa responsiva com navegação lateral.
 - Painel com indicadores gerais do almoxarifado.
 - Cadastro, listagem e edição de produtos.
 - Cadastro e acompanhamento de pedidos de transferência com vários produtos.

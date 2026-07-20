@@ -1,8 +1,7 @@
 "use client";
 
 import { AppHeader } from "@/components/AppHeader";
-import { AppFooter } from "@/components/AppFooter";
-import { NoticeBar } from "@/components/NoticeBar";
+import { AppSidebar } from "@/components/AppSidebar";
 import { AcessoTab } from "@/components/tabs/AcessoTab";
 import { DashboardTab } from "@/components/tabs/DashboardTab";
 import { ItensTab } from "@/components/tabs/ItensTab";
@@ -15,39 +14,39 @@ import { useAlmoxarifado } from "@/lib/use-almoxarifado";
 export default function Home() {
   const app = useAlmoxarifado();
 
+  if (!app.authSession) {
+    return (
+      <main className="min-h-screen bg-[#11121a] text-[#f4f4f6]">
+        <AcessoTab app={app} />
+      </main>
+    );
+  }
+
   return (
-    <main className="flex min-h-screen flex-col bg-[#eef2ef] text-[#17231f]">
-      <AppHeader
-        activeTab={app.activeTab}
-        authSession={app.authSession}
-        query={app.query}
-        setActiveTab={app.setActiveTab}
-        setQuery={app.setQuery}
-      />
+    <main className="min-h-screen bg-[#11121a] text-[#f4f4f6] lg:flex">
+      <AppSidebar activeTab={app.activeTab} authSession={app.authSession} setActiveTab={app.setActiveTab} />
 
-      <NoticeBar
-        notice={app.notice}
-        secretariasCount={app.secretarias.length}
-        showBase={Boolean(app.authSession)}
-      />
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+        <AppHeader authSession={app.authSession} query={app.query} setQuery={app.setQuery} />
 
-      <div className="mx-auto grid w-full max-w-7xl flex-1 content-start gap-6 px-4 py-6 sm:px-6 lg:px-8">
-        {app.authSession && app.isLoadingData ? (
-          <p className="py-12 text-center text-sm font-semibold text-[#53645c]">Carregando dados do almoxarifado...</p>
-        ) : (
-          <>
-            {app.activeTab === "painel" && <DashboardTab app={app} />}
-            {app.activeTab === "pedidos" && <PedidosTab app={app} />}
-            {app.activeTab === "transferencias" && <TransferenciasTab app={app} />}
-            {app.activeTab === "itens" && <ItensTab app={app} />}
-            {app.activeTab === "secretarias" && <SecretariasTab app={app} />}
-            {app.activeTab === "usuarios" && <UsuariosTab app={app} />}
-            {app.activeTab === "acesso" && <AcessoTab app={app} />}
-          </>
-        )}
+        <div className="grid w-full flex-1 content-start gap-6 px-4 py-6 sm:px-6">
+          {app.authSession && app.isLoadingData ? (
+            <p className="py-12 text-center text-sm font-semibold text-[#9a9ba4]">
+              Carregando dados do almoxarifado...
+            </p>
+          ) : (
+            <>
+              {app.activeTab === "painel" && <DashboardTab app={app} />}
+              {app.activeTab === "pedidos" && <PedidosTab app={app} />}
+              {app.activeTab === "transferencias" && <TransferenciasTab app={app} />}
+              {app.activeTab === "itens" && <ItensTab app={app} />}
+              {app.activeTab === "secretarias" && <SecretariasTab app={app} />}
+              {app.activeTab === "usuarios" && <UsuariosTab app={app} />}
+              {app.activeTab === "acesso" && <AcessoTab app={app} />}
+            </>
+          )}
+        </div>
       </div>
-
-      <AppFooter />
     </main>
   );
 }
