@@ -23,7 +23,7 @@ END $$;
 
 -- cria o enum para os status de transferencia
 DO $$ BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'status_pedido_trasferencia') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'status_pedido_transferencia') THEN
         CREATE TYPE status_pedido_trasferencia AS ENUM('Aberto', 'Analise', 'Completo', 'Cancelado');
     END IF;
 END $$;
