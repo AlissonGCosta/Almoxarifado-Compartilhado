@@ -1,4 +1,12 @@
-export type TabId = "painel" | "pedidos" | "itens" | "secretarias" | "usuarios" | "acesso" | "planejamento";
+export type TabId =
+  | "painel"
+  | "pedidos"
+  | "transferencias"
+  | "itens"
+  | "secretarias"
+  | "usuarios"
+  | "acesso"
+  | "planejamento";
 
 export type ApiMode = "verificando" | "sincronizado" | "local";
 
@@ -12,16 +20,31 @@ export type PedidoCompraStatus =
 
 export type PedidoStatusFilter = PedidoCompraStatus | "TODOS";
 
+export type ProdutoStatus = "NOVO" | "USADO" | "GASTO" | "VELHO";
+
+export type ProdutoType = "DOADO" | "COMPRADO";
+
+export type TransferenciaStatus = "ABERTO" | "ANALISE" | "COMPLETO" | "CANCELADO";
+
+export type TransferenciaStatusFilter = TransferenciaStatus | "TODOS";
+
 export type TabItem = {
   id: TabId;
   label: string;
 };
 
-export type Item = {
+export type Produto = {
   id: string;
-  name: string;
-  description: string;
-  quantity: number;
+  nome: string;
+  descricao: string;
+  quantidade: number;
+  preco: number;
+  status: ProdutoStatus;
+  type: ProdutoType;
+  usuarioCadastrado: string;
+  secretariaCadastrada: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type Secretaria = {
@@ -59,10 +82,33 @@ export type PedidoCompra = {
   motivoCancelamento?: string;
 };
 
-export type ItemForm = {
-  name: string;
-  description: string;
-  quantity: string;
+export type ItemPedidoTransferencia = {
+  id: string;
+  pedidoTransferencia: string;
+  produto: string;
+  quantidade: number;
+};
+
+export type PedidoTransferencia = {
+  id: string;
+  descricaoPedido: string;
+  razaoSocial: string;
+  status: TransferenciaStatus;
+  motivoCancelamento?: string | null;
+  usuarioId: string;
+  secretariaId: string;
+  itens: ItemPedidoTransferencia[];
+};
+
+export type ProdutoForm = {
+  nome: string;
+  descricao: string;
+  quantidade: string;
+  preco: string;
+  status: ProdutoStatus;
+  type: ProdutoType;
+  usuarioCadastrado: string;
+  secretariaCadastrada: string;
 };
 
 export type SecretariaForm = {
@@ -89,4 +135,17 @@ export type PedidoCompraForm = {
   preco: string;
   idUsuario: string;
   idSecretaria: string;
+};
+
+export type ItemTransferenciaForm = {
+  produtoId: string;
+  quantidade: string;
+};
+
+export type PedidoTransferenciaForm = {
+  descricaoPedido: string;
+  razaoSocial: string;
+  usuarioId: string;
+  secretariaId: string;
+  itens: ItemTransferenciaForm[];
 };

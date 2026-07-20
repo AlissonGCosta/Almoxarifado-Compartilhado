@@ -33,7 +33,7 @@ export function AppHeader({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#73827b]"
-              placeholder="Item, secretaria, usuário"
+              placeholder="Produto, pedido, secretaria ou usuário"
               type="search"
             />
           </label>

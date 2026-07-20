@@ -7,17 +7,17 @@ export function PedidosTab({ app }: { app: AlmoxarifadoViewModel }) {
   return (
     <section className="form-page-grid">
       <form onSubmit={app.handleCreatePedido} className="rounded border border-[#cbd8d0] bg-white">
-        <SectionHeader title="Novo pedido de compra" subtitle="Solicitação vinculada a item, usuário e secretaria" />
+        <SectionHeader title="Novo pedido de compra" subtitle="Solicitação vinculada a produto, usuário e secretaria" />
         <div className="grid gap-4 p-4 md:grid-cols-2">
-          <Field label="Item">
+          <Field label="Produto">
             <select
               value={app.pedidoForm.idProduto}
               onChange={(event) => app.handlePedidoProdutoChange(event.target.value)}
               className="form-input"
             >
-              {app.items.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
+              {app.produtos.map((produto) => (
+                <option key={produto.id} value={produto.id}>
+                  {produto.nome}
                 </option>
               ))}
             </select>

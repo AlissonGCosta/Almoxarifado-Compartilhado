@@ -7,13 +7,15 @@ O front-end usa Next.js com App Router, TypeScript, Tailwind CSS e ESLint.
 ## Funcionalidades atuais
 
 - Painel com indicadores gerais do almoxarifado.
-- Cadastro e listagem de itens.
+- Cadastro, listagem e edição de produtos, incluindo preço, estado, origem, responsável e secretaria.
+- Cadastro e listagem de pedidos de transferência com um ou mais produtos.
+- Filtro e atualização de status dos pedidos de transferência.
+- Listagem dos itens vinculados aos pedidos de transferência.
 - Cadastro, listagem e edição de secretarias.
 - Cadastro, listagem e edição parcial de usuários.
 - Cadastro, listagem, filtro por status e remoção de pedidos de compra.
 - Tela de acesso preparada para autenticação futura.
-- Tela de planejamento com pontos pendentes de integração.
-- Fallback local quando a API não responde ou alguma rota ainda está indisponível.
+- Fallback local por recurso quando uma rota da API não responde.
 
 ## Integração com a API
 
@@ -35,17 +37,25 @@ Para alterar o destino da API, defina a variável:
 BACKEND_URL=http://localhost:8080
 ```
 
+Rotas utilizadas pelas funcionalidades mais recentes:
+
+```text
+/v1/produtos
+/v1/pedidos-transferencia
+/v1/itens-pedido-transferencia
+```
+
 ## Limitações conhecidas
 
-- Login real ainda depende da API de autenticação.
-- Itens ainda podem cair em modo local se a rota `/items` estiver bloqueada.
-- Edição de usuários altera apenas `nome` e `email`, conforme o contrato atual da API.
-- Algumas regras de negócio de pedidos ainda dependem da definição final do back-end.
+- O login real ainda depende da API de autenticação.
+- A exclusão de produtos e transferências não aparece na interface porque `DELETE /v1/**` ainda exige autenticação.
+- A edição de usuários altera apenas `nome` e `email`, conforme o contrato atual da API.
+- Quando a API usa H2 com `ddl-auto: create-drop`, os dados são apagados ao reiniciar o back-end.
 
 ## Requisitos
 
-- Node.js
-- npm
+- Node.js 24.18
+- npm 11.16
 
 As versões exatas das dependências ficam registradas em `package-lock.json`.
 
