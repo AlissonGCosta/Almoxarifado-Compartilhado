@@ -5,10 +5,35 @@ export type TabId =
   | "itens"
   | "secretarias"
   | "usuarios"
-  | "acesso"
-  | "planejamento";
+  | "acesso";
 
 export type ApiMode = "verificando" | "sincronizado" | "local";
+
+export type AuthResponse = {
+  name: string;
+  email: string;
+  token: string;
+};
+
+export type AuthSession = {
+  name: string;
+  email: string;
+  token: string;
+  userId?: string;
+  role?: string;
+  expiresAt?: number;
+};
+
+export type LoginForm = {
+  email: string;
+  password: string;
+};
+
+export type PasswordForm = {
+  senhaAtual: string;
+  senhaNova: string;
+  confirmarSenha: string;
+};
 
 export type PedidoCompraStatus =
   | "PENDENTE"

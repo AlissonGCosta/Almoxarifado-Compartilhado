@@ -2,7 +2,13 @@
 
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { backendRequest } from "@/lib/api";
+import {
+  clearStoredAuthSession,
+  createAuthSession,
+  getStoredAuthSession,
+  saveAuthSession,
+} from "@/lib/auth";
+import { BackendError, backendRequest } from "@/lib/api";
 import { createLocalId } from "@/lib/formatters";
 import {
   initialItensTransferencia,
@@ -14,14 +20,18 @@ import {
 } from "@/lib/mock-data";
 import type {
   ApiMode,
+  AuthResponse,
+  AuthSession,
   ItemPedidoTransferencia,
   ItemTransferenciaForm,
+  LoginForm,
   PedidoCompra,
   PedidoCompraForm,
   PedidoCompraStatus,
   PedidoStatusFilter,
   PedidoTransferencia,
   PedidoTransferenciaForm,
+  PasswordForm,
   Produto,
   ProdutoForm,
   Secretaria,
@@ -51,7 +61,11 @@ function createTransferenciaItem(produtoId = ""): ItemTransferenciaForm {
 }
 
 export function useAlmoxarifado() {
-  const [activeTab, setActiveTab] = useState<TabId>("painel");
+  const [activeTab, setActiveTab] = useState<TabId>("acesso");
+  const [authSession, setAuthSession] = useState<AuthSession | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [produtos, setProdutos] = useState<Produto[]>(initialProdutos);
   const [secretarias, setSecretarias] = useState<Secretaria[]>(initialSecretarias);
   const [usuarios, setUsuarios] = useState<Usuario[]>(initialUsuarios);
@@ -68,6 +82,13 @@ export function useAlmoxarifado() {
   const [editingProdutoId, setEditingProdutoId] = useState<string | null>(null);
   const [editingSecretariaId, setEditingSecretariaId] = useState<string | null>(null);
   const [editingUsuarioId, setEditingUsuarioId] = useState<string | null>(null);
+
+  const [loginForm, setLoginForm] = useState<LoginForm>({ email: "", password: "" });
+  const [passwordForm, setPasswordForm] = useState<PasswordForm>({
+    senhaAtual: "",
+    senhaNova: "",
+    confirmarSenha: "",
+  });
 
   const [produtoForm, setProdutoForm] = useState<ProdutoForm>(
     createProdutoForm(initialUsuarios[0]?.id, initialSecretarias[0]?.id),
@@ -108,9 +129,28 @@ export function useAlmoxarifado() {
   });
 
   useEffect(() => {
+    const storedSession = getStoredAuthSession();
+    const timeoutId = window.setTimeout(() => {
+      setAuthSession(storedSession);
+      setActiveTab(storedSession ? "painel" : "acesso");
+      setNotice(
+        storedSession ? `Sessão restaurada para ${storedSession.name}.` : "Informe suas credenciais para entrar.",
+      );
+      setAuthReady(true);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    if (!authReady || !authSession) {
+      return;
+    }
+
     let ignore = false;
 
     async function loadData() {
+      setIsLoadingData(true);
       const [
         produtosResult,
         secretariasResult,
@@ -122,7 +162,7 @@ export function useAlmoxarifado() {
         backendRequest<Produto[]>("/v1/produtos"),
         backendRequest<Secretaria[]>("/v1/secretarias"),
         backendRequest<Usuario[]>("/v1/users"),
-        backendRequest<PedidoCompra[]>("/api/pedidos-compra"),
+        backendRequest<PedidoCompra[]>("/v1/pedidos-compra"),
         backendRequest<PedidoTransferencia[]>("/v1/pedidos-transferencia"),
         backendRequest<ItemPedidoTransferencia[]>("/v1/itens-pedido-transferencia"),
       ]);
@@ -141,6 +181,18 @@ export function useAlmoxarifado() {
       ];
       const loadedSomething = results.some((result) => result.status === "fulfilled");
       const failedSomething = results.some((result) => result.status === "rejected");
+      const unauthorized = results.some(
+        (result) => result.status === "rejected" && result.reason instanceof BackendError && result.reason.status === 401,
+      );
+
+      if (unauthorized) {
+        clearStoredAuthSession();
+        setAuthSession(null);
+        setActiveTab("acesso");
+        setNotice("Sua sessão expirou. Entre novamente.");
+        setIsLoadingData(false);
+        return;
+      }
 
       if (produtosResult.status === "fulfilled") {
         setProdutos(produtosResult.value);
@@ -244,6 +296,7 @@ export function useAlmoxarifado() {
             : "Dados sincronizados com as APIs disponíveis."
           : "API indisponível; interface operando com dados locais.",
       );
+      setIsLoadingData(false);
     }
 
     void loadData();
@@ -251,7 +304,28 @@ export function useAlmoxarifado() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [authReady, authSession]);
+
+  useEffect(() => {
+    const expiresAt = authSession?.expiresAt;
+
+    if (!expiresAt) {
+      return;
+    }
+
+    const remaining = expiresAt * 1000 - Date.now();
+    const timeoutId = window.setTimeout(
+      () => {
+        clearStoredAuthSession();
+        setAuthSession(null);
+        setActiveTab("acesso");
+        setNotice("Sua sessão expirou. Entre novamente.");
+      },
+      Math.max(0, Math.min(remaining, 2_147_483_647)),
+    );
+
+    return () => window.clearTimeout(timeoutId);
+  }, [authSession?.expiresAt]);
 
   const filteredProdutos = useMemo(() => {
     const value = query.trim().toLowerCase();
@@ -387,6 +461,97 @@ export function useAlmoxarifado() {
     local: "Modo local",
   }[apiMode];
 
+  function handleTabChange(tab: TabId) {
+    if (!authSession && tab !== "acesso") {
+      setActiveTab("acesso");
+      setNotice("Faça login para acessar o sistema.");
+      return;
+    }
+
+    setActiveTab(tab);
+  }
+
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const payload = {
+      email: loginForm.email.trim(),
+      password: loginForm.password,
+    };
+
+    if (!payload.email || !payload.password) {
+      setNotice("Informe o e-mail e a senha.");
+      return;
+    }
+
+    setPendingAction("login");
+
+    try {
+      const response = await backendRequest<AuthResponse>("/v1/auth/login", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      const session = createAuthSession(response);
+
+      saveAuthSession(session);
+      setAuthSession(session);
+      setLoginForm({ email: "", password: "" });
+      setActiveTab("painel");
+      setNotice(`Bem-vindo, ${session.name}.`);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Não foi possível entrar no sistema.");
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  function handleLogout() {
+    clearStoredAuthSession();
+    setAuthSession(null);
+    setActiveTab("acesso");
+    setQuery("");
+    setIsLoadingData(false);
+    setApiMode("verificando");
+    setNotice("Sessão encerrada.");
+  }
+
+  async function handleChangePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!authSession?.userId) {
+      setNotice("O token atual não informa o identificador do usuário.");
+      return;
+    }
+
+    if (!passwordForm.senhaAtual || passwordForm.senhaNova.length < 8) {
+      setNotice("Informe a senha atual e uma nova senha com pelo menos 8 caracteres.");
+      return;
+    }
+
+    if (passwordForm.senhaNova !== passwordForm.confirmarSenha) {
+      setNotice("A confirmação da nova senha não confere.");
+      return;
+    }
+
+    setPendingAction("senha");
+
+    try {
+      await backendRequest<string>(`/v1/users/${authSession.userId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          senhaAtual: passwordForm.senhaAtual,
+          senhaNova: passwordForm.senhaNova,
+        }),
+      });
+      setPasswordForm({ senhaAtual: "", senhaNova: "", confirmarSenha: "" });
+      setNotice("Senha alterada com sucesso.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Não foi possível alterar a senha.");
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
   async function handleCreateProduto(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -414,6 +579,8 @@ export function useAlmoxarifado() {
       setNotice("Preencha todos os dados do produto com quantidade e preço maiores que zero.");
       return;
     }
+
+    setPendingAction("produto");
 
     if (editingProdutoId) {
       try {
@@ -443,6 +610,7 @@ export function useAlmoxarifado() {
 
       setEditingProdutoId(null);
       setProdutoForm(createProdutoForm(usuarios[0]?.id, secretarias[0]?.id));
+      setPendingAction(null);
       return;
     }
 
@@ -471,6 +639,7 @@ export function useAlmoxarifado() {
     }
 
     setProdutoForm(createProdutoForm(payload.usuarioCadastrado, payload.secretariaCadastrada));
+    setPendingAction(null);
   }
 
   function handleEditProduto(produto: Produto) {
@@ -508,6 +677,8 @@ export function useAlmoxarifado() {
       setNotice("Preencha todos os dados da secretaria.");
       return;
     }
+
+    setPendingAction("secretaria");
 
     if (editingSecretariaId) {
       const previousSecretaria = secretarias.find((secretaria) => secretaria.id === editingSecretariaId);
@@ -556,6 +727,7 @@ export function useAlmoxarifado() {
 
       setEditingSecretariaId(null);
       setSecretariaForm({ nome: "", sigla: "", endereco: "", cep: "" });
+      setPendingAction(null);
       return;
     }
 
@@ -588,6 +760,7 @@ export function useAlmoxarifado() {
     }
 
     setSecretariaForm({ nome: "", sigla: "", endereco: "", cep: "" });
+    setPendingAction(null);
   }
 
   function handleEditSecretaria(secretaria: Secretaria) {
@@ -621,6 +794,8 @@ export function useAlmoxarifado() {
         return;
       }
 
+      setPendingAction("usuario");
+
       try {
         await backendRequest<{ nome: string; email: string }>(`/v1/users/${editingUsuarioId}`, {
           method: "PUT",
@@ -647,6 +822,7 @@ export function useAlmoxarifado() {
         cpf: "",
         senha: "",
       });
+      setPendingAction(null);
       return;
     }
 
@@ -662,6 +838,8 @@ export function useAlmoxarifado() {
       setNotice("Preencha todos os dados do usuário.");
       return;
     }
+
+    setPendingAction("usuario");
 
     try {
       const created = await backendRequest<Usuario>("/v1/users", {
@@ -700,6 +878,7 @@ export function useAlmoxarifado() {
       cpf: "",
       senha: "",
     });
+    setPendingAction(null);
   }
 
   function handleEditUsuario(usuario: Usuario) {
@@ -767,8 +946,10 @@ export function useAlmoxarifado() {
       return;
     }
 
+    setPendingAction("pedido");
+
     try {
-      const created = await backendRequest<PedidoCompra>("/api/pedidos-compra", {
+      const created = await backendRequest<PedidoCompra>("/v1/pedidos-compra", {
         method: "POST",
         body: JSON.stringify(payload),
       });
@@ -783,20 +964,7 @@ export function useAlmoxarifado() {
     }
 
     setPedidoForm((current) => ({ ...current, descricaoPedido: "", quantidade: "", preco: "" }));
-  }
-
-  async function handleDeletePedido(idPedidoCompra: string) {
-    try {
-      await backendRequest<void>(`/api/pedidos-compra/${idPedidoCompra}`, { method: "DELETE" });
-
-      setPedidos((current) => current.filter((pedido) => pedido.idPedidoCompra !== idPedidoCompra));
-      setApiMode("sincronizado");
-      setNotice("Pedido removido da API.");
-    } catch (error) {
-      setPedidos((current) => current.filter((pedido) => pedido.idPedidoCompra !== idPedidoCompra));
-      setApiMode("local");
-      setNotice(error instanceof Error ? `${error.message} Pedido removido localmente.` : "Pedido removido localmente.");
-    }
+    setPendingAction(null);
   }
 
   function handleAddTransferenciaItem() {
@@ -866,6 +1034,8 @@ export function useAlmoxarifado() {
       return;
     }
 
+    setPendingAction("transferencia");
+
     try {
       const created = await backendRequest<PedidoTransferencia>("/v1/pedidos-transferencia", {
         method: "POST",
@@ -915,9 +1085,12 @@ export function useAlmoxarifado() {
       razaoSocial: "",
       itens: [createTransferenciaItem(produtos[0]?.id)],
     }));
+    setPendingAction(null);
   }
 
   async function handleTransferenciaStatusChange(id: string, status: TransferenciaStatus) {
+    setPendingAction(`transferencia-status-${id}`);
+
     try {
       const updated = await backendRequest<PedidoTransferencia>(`/v1/pedidos-transferencia/${id}`, {
         method: "PATCH",
@@ -939,6 +1112,8 @@ export function useAlmoxarifado() {
           ? `${error.message} Status atualizado localmente.`
           : "Status atualizado localmente.",
       );
+    } finally {
+      setPendingAction(null);
     }
   }
 
@@ -946,6 +1121,8 @@ export function useAlmoxarifado() {
     activeTab,
     activeTransferencias,
     apiStatusLabel,
+    authReady,
+    authSession,
     editingProdutoId,
     editingSecretariaId,
     editingUsuarioId,
@@ -958,26 +1135,32 @@ export function useAlmoxarifado() {
     handleCancelProdutoEdit,
     handleCancelSecretariaEdit,
     handleCancelUsuarioEdit,
+    handleChangePassword,
     handleCreatePedido,
     handleCreateProduto,
     handleCreateSecretaria,
     handleCreateTransferencia,
     handleCreateUsuario,
-    handleDeletePedido,
     handleEditProduto,
     handleEditSecretaria,
     handleEditUsuario,
     handlePedidoProdutoChange,
+    handleLogin,
+    handleLogout,
     handleRemoveTransferenciaItem,
     handleTransferenciaItemChange,
     handleTransferenciaStatusChange,
     itensTransferencia,
     itensTransferenciaByPedido,
+    isLoadingData,
+    loginForm,
     lowStock,
     notice,
     pedidoForm,
     pedidoStatusFilter,
     pedidos,
+    passwordForm,
+    pendingAction,
     pendingPedidos,
     produtoById,
     produtoForm,
@@ -986,9 +1169,11 @@ export function useAlmoxarifado() {
     secretariaById,
     secretariaForm,
     secretarias,
-    setActiveTab,
+    setActiveTab: handleTabChange,
+    setLoginForm,
     setPedidoForm,
     setPedidoStatusFilter,
+    setPasswordForm,
     setProdutoForm,
     setQuery,
     setSecretariaForm,

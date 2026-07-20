@@ -20,7 +20,6 @@ export const tabs: TabItem[] = [
   { id: "secretarias", label: "Secretarias" },
   { id: "usuarios", label: "Usuários" },
   { id: "acesso", label: "Acesso" },
-  { id: "planejamento", label: "Planejamento" },
 ];
 
 export const pedidoStatuses: PedidoCompraStatus[] = [
@@ -186,28 +185,5 @@ export const initialTransferencias: PedidoTransferencia[] = [
     usuarioId: "local-usuario-1",
     secretariaId: "local-secretaria-2",
     itens: initialItensTransferencia,
-  },
-];
-
-export const planejamento = [
-  {
-    titulo: "Produtos",
-    status: "Integrado",
-    detalhe: "Cadastro, listagem e edição conectados às rotas de produtos.",
-  },
-  {
-    titulo: "Pedidos de compra",
-    status: "Em integração",
-    detalhe: "Tela preparada para criar, listar, filtrar e remover pedidos de compra.",
-  },
-  {
-    titulo: "Transferências",
-    status: "Integrado",
-    detalhe: "Cadastro, listagem de itens e atualização de status conectados à API.",
-  },
-  {
-    titulo: "Login e permissões",
-    status: "Aguardando API",
-    detalhe: "Interface reservada; falta o contrato de autenticação no back-end.",
   },
 ];

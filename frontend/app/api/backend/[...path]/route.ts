@@ -6,7 +6,7 @@ type RouteContext = {
   }>;
 };
 
-const backendUrl = process.env.BACKEND_URL ?? "http://localhost:8080";
+const backendUrl = process.env.BACKEND_URL ?? "http://127.0.0.1:8080";
 
 async function proxyRequest(request: NextRequest, context: RouteContext) {
   const { path } = await context.params;
@@ -15,6 +15,9 @@ async function proxyRequest(request: NextRequest, context: RouteContext) {
 
   const headers = new Headers(request.headers);
   headers.delete("host");
+  headers.delete("connection");
+  headers.delete("content-length");
+  headers.delete("expect");
 
   try {
     const response = await fetch(targetUrl, {
@@ -33,7 +36,8 @@ async function proxyRequest(request: NextRequest, context: RouteContext) {
       statusText: response.statusText,
       headers: responseHeaders,
     });
-  } catch {
+  } catch (error) {
+    console.error("Falha ao conectar ao back-end:", error);
     return NextResponse.json(
       {
         message: "Back-end indisponível.",

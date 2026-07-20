@@ -19,6 +19,8 @@ export function UsuariosTab({ app }: { app: AlmoxarifadoViewModel }) {
                   app.setUsuarioForm((current) => ({ ...current, siglaSecretaria: event.target.value }))
                 }
                 className="form-input"
+                disabled={!app.secretarias.length}
+                required
               >
                 {app.secretarias.map((secretaria) => (
                   <option key={secretaria.id} value={secretaria.sigla}>
@@ -34,6 +36,7 @@ export function UsuariosTab({ app }: { app: AlmoxarifadoViewModel }) {
               onChange={(event) => app.setUsuarioForm((current) => ({ ...current, nome: event.target.value }))}
               className="form-input"
               placeholder="Nome completo"
+              required
             />
           </Field>
           <Field label="E-mail">
@@ -43,6 +46,7 @@ export function UsuariosTab({ app }: { app: AlmoxarifadoViewModel }) {
               className="form-input"
               placeholder="servidor@prefeitura.gov.br"
               type="email"
+              required
             />
           </Field>
           {!app.editingUsuarioId && (
@@ -53,6 +57,9 @@ export function UsuariosTab({ app }: { app: AlmoxarifadoViewModel }) {
                   onChange={(event) => app.setUsuarioForm((current) => ({ ...current, cpf: event.target.value }))}
                   className="form-input"
                   placeholder="00000000000"
+                  inputMode="numeric"
+                  pattern="[0-9]{11}"
+                  required
                 />
               </Field>
               <Field label="Senha">
@@ -64,16 +71,22 @@ export function UsuariosTab({ app }: { app: AlmoxarifadoViewModel }) {
                   maxLength={32}
                   type="password"
                   placeholder="Mínimo de 8 caracteres"
+                  required
                 />
               </Field>
             </>
           )}
           <div className="grid gap-3 md:col-span-2 sm:grid-cols-[1fr_auto]">
             <button
-              className="h-11 rounded bg-[#1f6b4f] px-4 text-sm font-bold text-white hover:bg-[#173f35]"
+              className="h-11 rounded bg-[#1f6b4f] px-4 text-sm font-bold text-white hover:bg-[#173f35] disabled:cursor-wait disabled:opacity-60"
+              disabled={app.pendingAction === "usuario" || (!app.editingUsuarioId && !app.secretarias.length)}
               type="submit"
             >
-              {app.editingUsuarioId ? "Salvar alterações" : "Cadastrar usuário"}
+              {app.pendingAction === "usuario"
+                ? "Salvando..."
+                : app.editingUsuarioId
+                  ? "Salvar alterações"
+                  : "Cadastrar usuário"}
             </button>
             {app.editingUsuarioId && (
               <button
@@ -90,6 +103,9 @@ export function UsuariosTab({ app }: { app: AlmoxarifadoViewModel }) {
 
       <DataPanel title="Usuários cadastrados" subtitle={`${app.filteredUsuarios.length} registros`}>
         <div className="grid gap-3">
+          {!app.filteredUsuarios.length && (
+            <p className="py-8 text-center text-sm text-[#53645c]">Nenhum usuário encontrado.</p>
+          )}
           {app.filteredUsuarios.map((usuario) => (
             <article key={usuario.id} className="rounded border border-[#dbe5df] bg-[#fbfcfb] p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

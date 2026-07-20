@@ -134,9 +134,13 @@ export function ItensTab({ app }: { app: AlmoxarifadoViewModel }) {
             <button
               className="h-11 flex-1 rounded bg-[#1f6b4f] px-4 text-sm font-bold text-white hover:bg-[#173f35] disabled:cursor-not-allowed disabled:opacity-60"
               type="submit"
-              disabled={!canSubmit}
+              disabled={!canSubmit || app.pendingAction === "produto"}
             >
-              {app.editingProdutoId ? "Salvar alterações" : "Cadastrar produto"}
+              {app.pendingAction === "produto"
+                ? "Salvando..."
+                : app.editingProdutoId
+                  ? "Salvar alterações"
+                  : "Cadastrar produto"}
             </button>
             {app.editingProdutoId && (
               <button

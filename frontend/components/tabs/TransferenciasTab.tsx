@@ -140,9 +140,9 @@ export function TransferenciasTab({ app }: { app: AlmoxarifadoViewModel }) {
           <button
             className="h-11 rounded bg-[#1f6b4f] px-4 text-sm font-bold text-white hover:bg-[#173f35] disabled:cursor-not-allowed disabled:opacity-60 md:col-span-2"
             type="submit"
-            disabled={!canSubmit}
+            disabled={!canSubmit || app.pendingAction === "transferencia"}
           >
-            Cadastrar transferência
+            {app.pendingAction === "transferencia" ? "Cadastrando..." : "Cadastrar transferência"}
           </button>
         </div>
       </form>
@@ -213,6 +213,7 @@ export function TransferenciasTab({ app }: { app: AlmoxarifadoViewModel }) {
                         )
                       }
                       className="form-input min-w-40 bg-white"
+                      disabled={app.pendingAction === `transferencia-status-${transferencia.id}`}
                     >
                       {transferenciaStatuses.map((status) => (
                         <option key={status} value={status}>
