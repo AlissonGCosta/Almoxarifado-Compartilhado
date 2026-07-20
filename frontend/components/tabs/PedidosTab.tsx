@@ -7,17 +7,20 @@ export function PedidosTab({ app }: { app: AlmoxarifadoViewModel }) {
   return (
     <section className="form-page-grid">
       <form onSubmit={app.handleCreatePedido} className="rounded border border-[#cbd8d0] bg-white">
-        <SectionHeader title="Novo pedido de compra" subtitle="Solicitação vinculada a item, usuário e secretaria" />
+        <SectionHeader title="Novo pedido de compra" subtitle="Solicitação vinculada a produto, usuário e secretaria" />
         <div className="grid gap-4 p-4 md:grid-cols-2">
-          <Field label="Item">
+          <Field label="Produto">
             <select
               value={app.pedidoForm.idProduto}
               onChange={(event) => app.handlePedidoProdutoChange(event.target.value)}
               className="form-input"
+              disabled={!app.produtos.length}
+              required
             >
-              {app.items.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
+              {!app.produtos.length && <option value="">Nenhum produto cadastrado</option>}
+              {app.produtos.map((produto) => (
+                <option key={produto.id} value={produto.id}>
+                  {produto.nome}
                 </option>
               ))}
             </select>
@@ -28,6 +31,7 @@ export function PedidosTab({ app }: { app: AlmoxarifadoViewModel }) {
               onChange={(event) => app.setPedidoForm((current) => ({ ...current, nomeProduto: event.target.value }))}
               className="form-input"
               placeholder="Produto solicitado"
+              required
             />
           </Field>
           <Field label="Descrição do produto" className="md:col-span-2">
@@ -60,6 +64,7 @@ export function PedidosTab({ app }: { app: AlmoxarifadoViewModel }) {
                 step="0.01"
                 type="number"
                 placeholder="0"
+                required
               />
             </Field>
             <Field label="Preço estimado">
@@ -71,6 +76,7 @@ export function PedidosTab({ app }: { app: AlmoxarifadoViewModel }) {
                 step="0.01"
                 type="number"
                 placeholder="0,00"
+                required
               />
             </Field>
           </div>
@@ -79,7 +85,10 @@ export function PedidosTab({ app }: { app: AlmoxarifadoViewModel }) {
               value={app.pedidoForm.idUsuario}
               onChange={(event) => app.setPedidoForm((current) => ({ ...current, idUsuario: event.target.value }))}
               className="form-input"
+              disabled={!app.usuarios.length}
+              required
             >
+              {!app.usuarios.length && <option value="">Nenhum usuário cadastrado</option>}
               {app.usuarios.map((usuario) => (
                 <option key={usuario.id} value={usuario.id}>
                   {usuario.nome} · {usuario.siglaSecretaria}
@@ -92,7 +101,10 @@ export function PedidosTab({ app }: { app: AlmoxarifadoViewModel }) {
               value={app.pedidoForm.idSecretaria}
               onChange={(event) => app.setPedidoForm((current) => ({ ...current, idSecretaria: event.target.value }))}
               className="form-input"
+              disabled={!app.secretarias.length}
+              required
             >
+              {!app.secretarias.length && <option value="">Nenhuma secretaria cadastrada</option>}
               {app.secretarias.map((secretaria) => (
                 <option key={secretaria.id} value={secretaria.id}>
                   {secretaria.sigla} - {secretaria.nome}
@@ -101,10 +113,16 @@ export function PedidosTab({ app }: { app: AlmoxarifadoViewModel }) {
             </select>
           </Field>
           <button
-            className="h-11 rounded bg-[#1f6b4f] px-4 text-sm font-bold text-white hover:bg-[#173f35] md:col-span-2"
+            className="h-11 rounded bg-[#1f6b4f] px-4 text-sm font-bold text-white hover:bg-[#173f35] disabled:cursor-wait disabled:opacity-60 md:col-span-2"
+            disabled={
+              app.pendingAction === "pedido" ||
+              !app.produtos.length ||
+              !app.usuarios.length ||
+              !app.secretarias.length
+            }
             type="submit"
           >
-            Cadastrar pedido
+            {app.pendingAction === "pedido" ? "Cadastrando..." : "Cadastrar pedido"}
           </button>
         </div>
       </form>
@@ -139,6 +157,9 @@ export function PedidosTab({ app }: { app: AlmoxarifadoViewModel }) {
         </div>
 
         <div className="grid gap-3">
+          {!app.filteredPedidos.length && (
+            <p className="py-8 text-center text-sm text-[#53645c]">Nenhum pedido de compra encontrado.</p>
+          )}
           {app.filteredPedidos.map((pedido) => {
             const usuario = app.usuarioById.get(pedido.idUsuario);
             const secretaria = app.secretariaById.get(pedido.idSecretaria);
@@ -164,13 +185,6 @@ export function PedidosTab({ app }: { app: AlmoxarifadoViewModel }) {
                     <div className="rounded border border-[#d5b35c] bg-[#fff7db] px-3 py-2 text-sm font-bold text-[#6d5510]">
                       {pedido.quantidade} un. · {formatCurrency(pedido.preco)}
                     </div>
-                    <button
-                      onClick={() => void app.handleDeletePedido(pedido.idPedidoCompra)}
-                      className="h-9 rounded border border-[#b84a42] bg-white px-3 text-sm font-bold text-[#8d2f29] hover:bg-[#fff1ef]"
-                      type="button"
-                    >
-                      Remover
-                    </button>
                   </div>
                 </div>
               </article>

@@ -17,6 +17,7 @@ export function SecretariasTab({ app }: { app: AlmoxarifadoViewModel }) {
               onChange={(event) => app.setSecretariaForm((current) => ({ ...current, nome: event.target.value }))}
               className="form-input"
               placeholder="Secretaria Municipal de..."
+              required
             />
           </Field>
           <Field label="Sigla">
@@ -26,6 +27,7 @@ export function SecretariasTab({ app }: { app: AlmoxarifadoViewModel }) {
               className="form-input uppercase"
               placeholder="SME"
               maxLength={12}
+              required
             />
           </Field>
           <Field label="Endereço">
@@ -34,6 +36,7 @@ export function SecretariasTab({ app }: { app: AlmoxarifadoViewModel }) {
               onChange={(event) => app.setSecretariaForm((current) => ({ ...current, endereco: event.target.value }))}
               className="form-input"
               placeholder="Rua, número"
+              required
             />
           </Field>
           <Field label="CEP">
@@ -42,14 +45,22 @@ export function SecretariasTab({ app }: { app: AlmoxarifadoViewModel }) {
               onChange={(event) => app.setSecretariaForm((current) => ({ ...current, cep: event.target.value }))}
               className="form-input"
               placeholder="00000-000"
+              inputMode="numeric"
+              pattern="[0-9]{5}-?[0-9]{3}"
+              required
             />
           </Field>
           <div className="grid gap-3 md:col-span-2 sm:grid-cols-[1fr_auto]">
             <button
-              className="h-11 rounded bg-[#1f6b4f] px-4 text-sm font-bold text-white hover:bg-[#173f35]"
+              className="h-11 rounded bg-[#1f6b4f] px-4 text-sm font-bold text-white hover:bg-[#173f35] disabled:cursor-wait disabled:opacity-60"
+              disabled={app.pendingAction === "secretaria"}
               type="submit"
             >
-              {app.editingSecretariaId ? "Salvar alterações" : "Cadastrar secretaria"}
+              {app.pendingAction === "secretaria"
+                ? "Salvando..."
+                : app.editingSecretariaId
+                  ? "Salvar alterações"
+                  : "Cadastrar secretaria"}
             </button>
             {app.editingSecretariaId && (
               <button
@@ -77,6 +88,13 @@ export function SecretariasTab({ app }: { app: AlmoxarifadoViewModel }) {
               </tr>
             </thead>
             <tbody>
+              {!app.filteredSecretarias.length && (
+                <tr>
+                  <td className="px-4 py-8 text-center text-[#53645c]" colSpan={5}>
+                    Nenhuma secretaria encontrada.
+                  </td>
+                </tr>
+              )}
               {app.filteredSecretarias.map((secretaria) => (
                 <tr key={secretaria.id} className="border-t border-[#e1e8e4]">
                   <td className="px-4 py-3 font-bold text-[#173f35]">{secretaria.sigla}</td>

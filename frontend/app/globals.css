@@ -1,21 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  --background: #eef2ef;
-  --foreground: #17231f;
+  --background: #11121a;
+  --foreground: #f4f4f6;
+  --surface: #171821;
+  --surface-raised: #21222d;
+  --surface-soft: #282a35;
+  --border: #31333f;
+  --text: #f4f4f6;
+  --muted: #9a9ba4;
+  --accent: #a9dfd8;
+  --accent-strong: #77c8be;
+  --warning: #feb95a;
+  --danger: #ff8178;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-mono: "Courier New", monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  color-scheme: dark;
 }
 
 html {
@@ -35,31 +46,46 @@ button {
   cursor: pointer;
 }
 
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 3px solid #f6d36f;
+button:focus-visible {
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 ::selection {
-  background: #f6d36f;
-  color: #10241e;
+  background: var(--accent);
+  color: var(--surface);
 }
 
 .form-input {
   width: 100%;
-  border: 1px solid #b9c8be;
-  border-radius: 4px;
-  background: #f8faf8;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #191a23;
   padding: 0.625rem 0.75rem;
-  color: #10241e;
+  color: var(--text);
   font-size: 0.875rem;
+  transition: border-color 150ms ease, background-color 150ms ease;
 }
 
 .form-input::placeholder {
-  color: #73827b;
+  color: #71727c;
+}
+
+.form-input:hover {
+  border-color: #444652;
+}
+
+.form-input:focus {
+  border-color: var(--accent);
+  background: #1d1e28;
+  outline: none;
 }
 
 .form-input:disabled {
@@ -70,7 +96,7 @@ textarea:focus-visible {
 .form-page-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 0;
+  gap: 1.5rem;
   align-items: start;
 }
 
@@ -80,5 +106,112 @@ textarea:focus-visible {
 }
 
 .form-page-grid > * + * {
-  margin-top: 1.5rem;
+  margin-top: 0;
+}
+
+/* Compatibilidade visual dos fluxos existentes com o novo tema. */
+.form-page-grid > form,
+.form-page-grid > section,
+.app-panel {
+  border-color: var(--border) !important;
+  background: var(--surface-raised) !important;
+}
+
+.form-page-grid article {
+  border-color: var(--border) !important;
+  background: var(--surface) !important;
+}
+
+.form-page-grid h2,
+.form-page-grid h3,
+.form-page-grid dd,
+.app-panel h2,
+.app-panel h3 {
+  color: var(--text) !important;
+}
+
+.form-page-grid p,
+.form-page-grid dt,
+.form-page-grid label,
+.form-page-grid span,
+.app-panel p {
+  border-color: var(--border);
+}
+
+.form-page-grid button[type="submit"] {
+  border-color: var(--accent) !important;
+  background: var(--accent) !important;
+  color: var(--surface) !important;
+}
+
+.form-page-grid button[type="submit"]:hover {
+  background: var(--accent-strong) !important;
+}
+
+.bg-white,
+.bg-\[\#fbfcfb\],
+.bg-\[\#f8faf8\] {
+  background-color: var(--surface-raised) !important;
+}
+
+.bg-\[\#eef5f1\],
+.bg-\[\#f1f5f2\],
+.bg-\[\#f3f6f4\] {
+  background-color: var(--surface-soft) !important;
+}
+
+.border-\[\#cbd8d0\],
+.border-\[\#dbe5df\],
+.border-\[\#e1e8e4\],
+.border-\[\#b9c8be\] {
+  border-color: var(--border) !important;
+}
+
+.text-\[\#10241e\] {
+  color: var(--text) !important;
+}
+
+.text-\[\#173f35\],
+.text-\[\#1f6b4f\],
+.text-\[\#2d6f58\],
+.text-\[\#315245\] {
+  color: var(--accent) !important;
+}
+
+.text-\[\#53645c\],
+.text-\[\#66766f\],
+.text-\[\#73827b\],
+.text-\[\#27443a\] {
+  color: var(--muted) !important;
+}
+
+.bg-\[\#173f35\],
+.bg-\[\#1f6b4f\] {
+  background-color: var(--accent) !important;
+  color: var(--surface) !important;
+}
+
+.bg-\[\#fff7db\] {
+  background-color: rgb(254 185 90 / 12%) !important;
+}
+
+.border-\[\#d5b35c\] {
+  border-color: rgb(254 185 90 / 48%) !important;
+}
+
+.text-\[\#6d5510\],
+.text-\[\#986b00\] {
+  color: var(--warning) !important;
+}
+
+.bg-\[\#fff1ef\] {
+  background-color: rgb(255 129 120 / 10%) !important;
+}
+
+.border-\[\#b84a42\] {
+  border-color: rgb(255 129 120 / 50%) !important;
+}
+
+.text-\[\#8d2f29\] {
+  color: var(--danger) !important;
 }

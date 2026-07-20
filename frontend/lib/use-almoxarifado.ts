@@ -2,42 +2,97 @@
 
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { backendRequest } from "@/lib/api";
+import {
+  clearStoredAuthSession,
+  createAuthSession,
+  getStoredAuthSession,
+  saveAuthSession,
+} from "@/lib/auth";
+import { BackendError, backendRequest } from "@/lib/api";
 import { createLocalId } from "@/lib/formatters";
-import { initialItems, initialPedidos, initialSecretarias, initialUsuarios } from "@/lib/mock-data";
+import {
+  initialItensTransferencia,
+  initialPedidos,
+  initialProdutos,
+  initialSecretarias,
+  initialTransferencias,
+  initialUsuarios,
+} from "@/lib/mock-data";
 import type {
   ApiMode,
-  Item,
-  ItemForm,
+  AuthResponse,
+  AuthSession,
+  ItemPedidoTransferencia,
+  ItemTransferenciaForm,
+  LoginForm,
   PedidoCompra,
   PedidoCompraForm,
   PedidoCompraStatus,
   PedidoStatusFilter,
+  PedidoTransferencia,
+  PedidoTransferenciaForm,
+  PasswordForm,
+  Produto,
+  ProdutoForm,
   Secretaria,
   SecretariaForm,
   TabId,
+  TransferenciaStatus,
+  TransferenciaStatusFilter,
   Usuario,
   UsuarioForm,
 } from "@/lib/types";
 
+function createProdutoForm(usuarioId = "", secretariaId = ""): ProdutoForm {
+  return {
+    nome: "",
+    descricao: "",
+    quantidade: "",
+    preco: "",
+    status: "NOVO",
+    type: "COMPRADO",
+    usuarioCadastrado: usuarioId,
+    secretariaCadastrada: secretariaId,
+  };
+}
+
+function createTransferenciaItem(produtoId = ""): ItemTransferenciaForm {
+  return { produtoId, quantidade: "" };
+}
+
 export function useAlmoxarifado() {
-  const [activeTab, setActiveTab] = useState<TabId>("painel");
-  const [items, setItems] = useState<Item[]>(initialItems);
+  const [activeTab, setActiveTab] = useState<TabId>("acesso");
+  const [authSession, setAuthSession] = useState<AuthSession | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [produtos, setProdutos] = useState<Produto[]>(initialProdutos);
   const [secretarias, setSecretarias] = useState<Secretaria[]>(initialSecretarias);
   const [usuarios, setUsuarios] = useState<Usuario[]>(initialUsuarios);
   const [pedidos, setPedidos] = useState<PedidoCompra[]>(initialPedidos);
+  const [transferencias, setTransferencias] = useState<PedidoTransferencia[]>(initialTransferencias);
+  const [itensTransferencia, setItensTransferencia] =
+    useState<ItemPedidoTransferencia[]>(initialItensTransferencia);
   const [apiMode, setApiMode] = useState<ApiMode>("verificando");
   const [notice, setNotice] = useState("Conectando aos serviços do almoxarifado.");
   const [query, setQuery] = useState("");
   const [pedidoStatusFilter, setPedidoStatusFilter] = useState<PedidoStatusFilter>("TODOS");
+  const [transferenciaStatusFilter, setTransferenciaStatusFilter] =
+    useState<TransferenciaStatusFilter>("TODOS");
+  const [editingProdutoId, setEditingProdutoId] = useState<string | null>(null);
   const [editingSecretariaId, setEditingSecretariaId] = useState<string | null>(null);
   const [editingUsuarioId, setEditingUsuarioId] = useState<string | null>(null);
 
-  const [itemForm, setItemForm] = useState<ItemForm>({
-    name: "",
-    description: "",
-    quantity: "",
+  const [loginForm, setLoginForm] = useState<LoginForm>({ email: "", password: "" });
+  const [passwordForm, setPasswordForm] = useState<PasswordForm>({
+    senhaAtual: "",
+    senhaNova: "",
+    confirmarSenha: "",
   });
+
+  const [produtoForm, setProdutoForm] = useState<ProdutoForm>(
+    createProdutoForm(initialUsuarios[0]?.id, initialSecretarias[0]?.id),
+  );
 
   const [secretariaForm, setSecretariaForm] = useState<SecretariaForm>({
     nome: "",
@@ -55,9 +110,9 @@ export function useAlmoxarifado() {
   });
 
   const [pedidoForm, setPedidoForm] = useState<PedidoCompraForm>({
-    idProduto: initialItems[0]?.id ?? "",
-    nomeProduto: initialItems[0]?.name ?? "",
-    descricaoProduto: initialItems[0]?.description ?? "",
+    idProduto: initialProdutos[0]?.id ?? "",
+    nomeProduto: initialProdutos[0]?.nome ?? "",
+    descricaoProduto: initialProdutos[0]?.descricao ?? "",
     descricaoPedido: "",
     quantidade: "",
     preco: "",
@@ -65,66 +120,167 @@ export function useAlmoxarifado() {
     idSecretaria: initialSecretarias[0]?.id ?? "",
   });
 
+  const [transferenciaForm, setTransferenciaForm] = useState<PedidoTransferenciaForm>({
+    descricaoPedido: "",
+    razaoSocial: "",
+    usuarioId: initialUsuarios[0]?.id ?? "",
+    secretariaId: initialSecretarias[0]?.id ?? "",
+    itens: [createTransferenciaItem(initialProdutos[0]?.id)],
+  });
+
   useEffect(() => {
+    const storedSession = getStoredAuthSession();
+    const timeoutId = window.setTimeout(() => {
+      setAuthSession(storedSession);
+      setActiveTab(storedSession ? "painel" : "acesso");
+      setNotice(
+        storedSession ? `Sessão restaurada para ${storedSession.name}.` : "Informe suas credenciais para entrar.",
+      );
+      setAuthReady(true);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    if (!authReady || !authSession) {
+      return;
+    }
+
+    const currentSession = authSession;
     let ignore = false;
 
     async function loadData() {
-      const [itemsResult, secretariasResult, usuariosResult, pedidosResult] = await Promise.allSettled([
-        backendRequest<Item[]>("/items"),
+      setIsLoadingData(true);
+      const [
+        produtosResult,
+        secretariasResult,
+        usuariosResult,
+        pedidosResult,
+        transferenciasResult,
+        itensTransferenciaResult,
+      ] = await Promise.allSettled([
+        backendRequest<Produto[]>("/v1/produtos"),
         backendRequest<Secretaria[]>("/v1/secretarias"),
         backendRequest<Usuario[]>("/v1/users"),
-        backendRequest<PedidoCompra[]>("/api/pedidos-compra"),
+        backendRequest<PedidoCompra[]>("/v1/pedidos-compra"),
+        backendRequest<PedidoTransferencia[]>("/v1/pedidos-transferencia"),
+        backendRequest<ItemPedidoTransferencia[]>("/v1/itens-pedido-transferencia"),
       ]);
 
       if (ignore) {
         return;
       }
 
-      const loadedSomething =
-        itemsResult.status === "fulfilled" ||
-        secretariasResult.status === "fulfilled" ||
-        usuariosResult.status === "fulfilled" ||
-        pedidosResult.status === "fulfilled";
+      const results = [
+        produtosResult,
+        secretariasResult,
+        usuariosResult,
+        pedidosResult,
+        transferenciasResult,
+        itensTransferenciaResult,
+      ];
+      const loadedSomething = results.some((result) => result.status === "fulfilled");
+      const failedSomething = results.some((result) => result.status === "rejected");
+      const unauthorized = results.some(
+        (result) => result.status === "rejected" && result.reason instanceof BackendError && result.reason.status === 401,
+      );
 
-      if (itemsResult.status === "fulfilled") {
-        setItems(itemsResult.value);
+      if (unauthorized) {
+        clearStoredAuthSession();
+        setAuthSession(null);
+        setActiveTab("acesso");
+        setNotice("Sua sessão expirou. Entre novamente.");
+        setIsLoadingData(false);
+        return;
+      }
+
+      if (produtosResult.status === "fulfilled") {
+        setProdutos(produtosResult.value);
+        const primeiroProduto = produtosResult.value[0];
+
         setPedidoForm((current) => {
-          const selected = itemsResult.value.find((item) => item.id === current.idProduto) ?? itemsResult.value[0];
+          const selected = produtosResult.value.find((produto) => produto.id === current.idProduto) ?? primeiroProduto;
 
-          return selected
-            ? {
-                ...current,
-                idProduto: selected.id,
-                nomeProduto: selected.name,
-                descricaoProduto: selected.description,
-              }
-            : current;
+          return {
+            ...current,
+            idProduto: selected?.id ?? "",
+            nomeProduto: selected?.nome ?? "",
+            descricaoProduto: selected?.descricao ?? "",
+          };
         });
+
+        setTransferenciaForm((current) => ({
+          ...current,
+          itens: current.itens.map((item) => ({
+            ...item,
+            produtoId:
+              produtosResult.value.find((produto) => produto.id === item.produtoId)?.id ?? primeiroProduto?.id ?? "",
+          })),
+        }));
       }
 
       if (secretariasResult.status === "fulfilled") {
         setSecretarias(secretariasResult.value);
+        const primeiraSecretaria = secretariasResult.value[0];
+
         setUsuarioForm((current) => ({
           ...current,
-          siglaSecretaria: current.siglaSecretaria || secretariasResult.value[0]?.sigla || "",
+          siglaSecretaria:
+            secretariasResult.value.find((secretaria) => secretaria.sigla === current.siglaSecretaria)?.sigla ??
+            primeiraSecretaria?.sigla ??
+            "",
+        }));
+        setProdutoForm((current) => ({
+          ...current,
+          secretariaCadastrada:
+            secretariasResult.value.find((secretaria) => secretaria.id === current.secretariaCadastrada)?.id ??
+            primeiraSecretaria?.id ??
+            "",
         }));
         setPedidoForm((current) => ({
           ...current,
           idSecretaria:
-            secretariasResult.value.find((secretaria) => secretaria.id === current.idSecretaria)?.id ||
-            secretariasResult.value[0]?.id ||
+            secretariasResult.value.find((secretaria) => secretaria.id === current.idSecretaria)?.id ??
+            primeiraSecretaria?.id ??
+            "",
+        }));
+        setTransferenciaForm((current) => ({
+          ...current,
+          secretariaId:
+            secretariasResult.value.find((secretaria) => secretaria.id === current.secretariaId)?.id ??
+            primeiraSecretaria?.id ??
             "",
         }));
       }
 
       if (usuariosResult.status === "fulfilled") {
         setUsuarios(usuariosResult.value);
+        const primeiroUsuario = usuariosResult.value[0];
+        const usuarioDaSessao = usuariosResult.value.find((usuario) => usuario.email === currentSession.email);
+
+        if (usuarioDaSessao?.nome && usuarioDaSessao.nome !== currentSession.name) {
+          const sessaoAtualizada = { ...currentSession, name: usuarioDaSessao.nome };
+          saveAuthSession(sessaoAtualizada);
+          setAuthSession(sessaoAtualizada);
+        }
+
+        setProdutoForm((current) => ({
+          ...current,
+          usuarioCadastrado:
+            usuariosResult.value.find((usuario) => usuario.id === current.usuarioCadastrado)?.id ??
+            primeiroUsuario?.id ??
+            "",
+        }));
         setPedidoForm((current) => ({
           ...current,
           idUsuario:
-            usuariosResult.value.find((usuario) => usuario.id === current.idUsuario)?.id ||
-            usuariosResult.value[0]?.id ||
-            "",
+            usuariosResult.value.find((usuario) => usuario.id === current.idUsuario)?.id ?? primeiroUsuario?.id ?? "",
+        }));
+        setTransferenciaForm((current) => ({
+          ...current,
+          usuarioId:
+            usuariosResult.value.find((usuario) => usuario.id === current.usuarioId)?.id ?? primeiroUsuario?.id ?? "",
         }));
       }
 
@@ -132,30 +288,64 @@ export function useAlmoxarifado() {
         setPedidos(pedidosResult.value);
       }
 
+      if (transferenciasResult.status === "fulfilled") {
+        setTransferencias(transferenciasResult.value);
+      }
+
+      if (itensTransferenciaResult.status === "fulfilled") {
+        setItensTransferencia(itensTransferenciaResult.value);
+      }
+
       setApiMode(loadedSomething ? "sincronizado" : "local");
       setNotice(
         loadedSomething
-          ? "Dados sincronizados com a API disponível."
+          ? failedSomething
+            ? "Parte dos dados foi sincronizada; as rotas indisponíveis usam dados locais."
+            : "Dados sincronizados com as APIs disponíveis."
           : "API indisponível; interface operando com dados locais.",
       );
+      setIsLoadingData(false);
     }
 
-    loadData();
+    void loadData();
 
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [authReady, authSession]);
 
-  const filteredItems = useMemo(() => {
+  useEffect(() => {
+    const expiresAt = authSession?.expiresAt;
+
+    if (!expiresAt) {
+      return;
+    }
+
+    const remaining = expiresAt * 1000 - Date.now();
+    const timeoutId = window.setTimeout(
+      () => {
+        clearStoredAuthSession();
+        setAuthSession(null);
+        setActiveTab("acesso");
+        setNotice("Sua sessão expirou. Entre novamente.");
+      },
+      Math.max(0, Math.min(remaining, 2_147_483_647)),
+    );
+
+    return () => window.clearTimeout(timeoutId);
+  }, [authSession?.expiresAt]);
+
+  const filteredProdutos = useMemo(() => {
     const value = query.trim().toLowerCase();
 
     if (!value) {
-      return items;
+      return produtos;
     }
 
-    return items.filter((item) => `${item.name} ${item.description}`.toLowerCase().includes(value));
-  }, [items, query]);
+    return produtos.filter((produto) =>
+      `${produto.nome} ${produto.descricao} ${produto.status} ${produto.type}`.toLowerCase().includes(value),
+    );
+  }, [produtos, query]);
 
   const filteredSecretarias = useMemo(() => {
     const value = query.trim().toLowerCase();
@@ -181,12 +371,29 @@ export function useAlmoxarifado() {
     );
   }, [usuarios, query]);
 
-  const itemById = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
+  const produtoById = useMemo(() => new Map(produtos.map((produto) => [produto.id, produto])), [produtos]);
   const usuarioById = useMemo(() => new Map(usuarios.map((usuario) => [usuario.id, usuario])), [usuarios]);
   const secretariaById = useMemo(
     () => new Map(secretarias.map((secretaria) => [secretaria.id, secretaria])),
     [secretarias],
   );
+
+  const itensTransferenciaByPedido = useMemo(() => {
+    const result = new Map<string, ItemPedidoTransferencia[]>();
+
+    for (const item of itensTransferencia) {
+      result.set(item.pedidoTransferencia, [...(result.get(item.pedidoTransferencia) ?? []), item]);
+    }
+
+    for (const transferencia of transferencias) {
+      const existing = result.get(transferencia.id) ?? [];
+      const existingIds = new Set(existing.map((item) => item.id));
+      const embedded = transferencia.itens.filter((item) => !existingIds.has(item.id));
+      result.set(transferencia.id, [...existing, ...embedded]);
+    }
+
+    return result;
+  }, [itensTransferencia, transferencias]);
 
   const filteredPedidos = useMemo(() => {
     const value = query.trim().toLowerCase();
@@ -207,48 +414,261 @@ export function useAlmoxarifado() {
     });
   }, [pedidos, pedidoStatusFilter, query, secretariaById, usuarioById]);
 
-  const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
-  const lowStock = items.filter((item) => item.quantity <= 15).length;
+  const filteredTransferencias = useMemo(() => {
+    const value = query.trim().toLowerCase();
+
+    return transferencias.filter((transferencia) => {
+      const usuario = usuarioById.get(transferencia.usuarioId);
+      const secretaria = secretariaById.get(transferencia.secretariaId);
+      const nomesProdutos = (itensTransferenciaByPedido.get(transferencia.id) ?? [])
+        .map((item) => produtoById.get(item.produto)?.nome ?? "")
+        .join(" ");
+      const matchesStatus =
+        transferenciaStatusFilter === "TODOS" || transferencia.status === transferenciaStatusFilter;
+      const matchesQuery =
+        !value ||
+        `${transferencia.descricaoPedido} ${transferencia.razaoSocial} ${nomesProdutos} ${usuario?.nome ?? ""} ${
+          secretaria?.nome ?? ""
+        } ${secretaria?.sigla ?? ""}`
+          .toLowerCase()
+          .includes(value);
+
+      return matchesStatus && matchesQuery;
+    });
+  }, [
+    itensTransferenciaByPedido,
+    produtoById,
+    query,
+    secretariaById,
+    transferenciaStatusFilter,
+    transferencias,
+    usuarioById,
+  ]);
+
+  const totalItems = produtos.reduce((acc, produto) => acc + produto.quantidade, 0);
+  const lowStock = produtos.filter((produto) => produto.quantidade <= 15).length;
   const pendingPedidos = pedidos.filter((pedido) => pedido.status === "PENDENTE").length;
+  const activeTransferencias = transferencias.filter(
+    (transferencia) => transferencia.status === "ABERTO" || transferencia.status === "ANALISE",
+  ).length;
   const totalPedidoValue = pedidos.reduce((acc, pedido) => acc + pedido.preco, 0);
+  const totalTransferenciaValue = transferencias.reduce((total, transferencia) => {
+    const itens = itensTransferenciaByPedido.get(transferencia.id) ?? [];
+
+    return (
+      total +
+      itens.reduce((subtotal, item) => {
+        const produto = produtoById.get(item.produto);
+        return subtotal + item.quantidade * (produto?.preco ?? 0);
+      }, 0)
+    );
+  }, 0);
   const apiStatusLabel = {
     verificando: "Verificando API",
     sincronizado: "API conectada",
     local: "Modo local",
   }[apiMode];
 
-  async function handleCreateItem(event: FormEvent<HTMLFormElement>) {
+  function handleTabChange(tab: TabId) {
+    if (!authSession && tab !== "acesso") {
+      setActiveTab("acesso");
+      setNotice("Faça login para acessar o sistema.");
+      return;
+    }
+
+    setActiveTab(tab);
+  }
+
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const payload = {
-      name: itemForm.name.trim(),
-      description: itemForm.description.trim(),
-      quantity: Number(itemForm.quantity),
+      email: loginForm.email.trim(),
+      password: loginForm.password,
     };
 
-    if (!payload.name || !payload.description || Number.isNaN(payload.quantity)) {
-      setNotice("Preencha nome, descrição e quantidade do item.");
+    if (!payload.email || !payload.password) {
+      setNotice("Informe o e-mail e a senha.");
+      return;
+    }
+
+    setPendingAction("login");
+
+    try {
+      const response = await backendRequest<AuthResponse>("/v1/auth/login", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      const session = createAuthSession(response);
+
+      saveAuthSession(session);
+      setAuthSession(session);
+      setLoginForm({ email: "", password: "" });
+      setActiveTab("painel");
+      setNotice(`Bem-vindo, ${session.name}.`);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Não foi possível entrar no sistema.");
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  function handleLogout() {
+    clearStoredAuthSession();
+    setAuthSession(null);
+    setActiveTab("acesso");
+    setQuery("");
+    setIsLoadingData(false);
+    setApiMode("verificando");
+    setNotice("Sessão encerrada.");
+  }
+
+  async function handleChangePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!authSession?.userId) {
+      setNotice("O token atual não informa o identificador do usuário.");
+      return;
+    }
+
+    if (!passwordForm.senhaAtual || passwordForm.senhaNova.length < 8) {
+      setNotice("Informe a senha atual e uma nova senha com pelo menos 8 caracteres.");
+      return;
+    }
+
+    if (passwordForm.senhaNova !== passwordForm.confirmarSenha) {
+      setNotice("A confirmação da nova senha não confere.");
+      return;
+    }
+
+    setPendingAction("senha");
+
+    try {
+      await backendRequest<string>(`/v1/users/${authSession.userId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          senhaAtual: passwordForm.senhaAtual,
+          senhaNova: passwordForm.senhaNova,
+        }),
+      });
+      setPasswordForm({ senhaAtual: "", senhaNova: "", confirmarSenha: "" });
+      setNotice("Senha alterada com sucesso.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Não foi possível alterar a senha.");
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function handleCreateProduto(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const payload = {
+      nome: produtoForm.nome.trim(),
+      descricao: produtoForm.descricao.trim(),
+      quantidade: Number(produtoForm.quantidade),
+      preco: Number(produtoForm.preco),
+      status: produtoForm.status,
+      type: produtoForm.type,
+      usuarioCadastrado: produtoForm.usuarioCadastrado,
+      secretariaCadastrada: produtoForm.secretariaCadastrada,
+    };
+
+    if (
+      !payload.nome ||
+      !payload.descricao ||
+      !payload.usuarioCadastrado ||
+      !payload.secretariaCadastrada ||
+      !Number.isFinite(payload.quantidade) ||
+      payload.quantidade <= 0 ||
+      !Number.isFinite(payload.preco) ||
+      payload.preco <= 0
+    ) {
+      setNotice("Preencha todos os dados do produto com quantidade e preço maiores que zero.");
+      return;
+    }
+
+    setPendingAction("produto");
+
+    if (editingProdutoId) {
+      try {
+        const updated = await backendRequest<Produto>(`/v1/produtos/${editingProdutoId}`, {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
+
+        setProdutos((current) =>
+          current.map((produto) => (produto.id === editingProdutoId ? updated : produto)),
+        );
+        setApiMode("sincronizado");
+        setNotice("Produto atualizado na API.");
+      } catch (error) {
+        setProdutos((current) =>
+          current.map((produto) =>
+            produto.id === editingProdutoId
+              ? { ...produto, ...payload, updatedAt: new Date().toISOString().slice(0, 10) }
+              : produto,
+          ),
+        );
+        setApiMode("local");
+        setNotice(
+          error instanceof Error ? `${error.message} Produto atualizado localmente.` : "Produto atualizado localmente.",
+        );
+      }
+
+      setEditingProdutoId(null);
+      setProdutoForm(createProdutoForm(usuarios[0]?.id, secretarias[0]?.id));
+      setPendingAction(null);
       return;
     }
 
     try {
-      const created = await backendRequest<Item>("/items", {
+      const created = await backendRequest<Produto>("/v1/produtos", {
         method: "POST",
         body: JSON.stringify(payload),
       });
 
-      setItems((current) => [created, ...current]);
+      setProdutos((current) => [created, ...current]);
       setApiMode("sincronizado");
-      setNotice("Item cadastrado na API.");
+      setNotice("Produto cadastrado na API.");
     } catch (error) {
-      setItems((current) => [{ id: createLocalId("item"), ...payload }, ...current]);
+      setProdutos((current) => [
+        {
+          id: createLocalId("produto"),
+          ...payload,
+          createdAt: new Date().toISOString().slice(0, 10),
+        },
+        ...current,
+      ]);
       setApiMode("local");
       setNotice(
-        error instanceof Error ? `${error.message} Registro mantido localmente.` : "Registro mantido localmente.",
+        error instanceof Error ? `${error.message} Produto mantido localmente.` : "Produto mantido localmente.",
       );
     }
 
-    setItemForm({ name: "", description: "", quantity: "" });
+    setProdutoForm(createProdutoForm(payload.usuarioCadastrado, payload.secretariaCadastrada));
+    setPendingAction(null);
+  }
+
+  function handleEditProduto(produto: Produto) {
+    setEditingProdutoId(produto.id);
+    setProdutoForm({
+      nome: produto.nome,
+      descricao: produto.descricao,
+      quantidade: produto.quantidade.toString(),
+      preco: produto.preco.toString(),
+      status: produto.status,
+      type: produto.type,
+      usuarioCadastrado: produto.usuarioCadastrado,
+      secretariaCadastrada: produto.secretariaCadastrada,
+    });
+    setNotice("Editando o produto selecionado.");
+  }
+
+  function handleCancelProdutoEdit() {
+    setEditingProdutoId(null);
+    setProdutoForm(createProdutoForm(usuarios[0]?.id, secretarias[0]?.id));
+    setNotice("Edição de produto cancelada.");
   }
 
   async function handleCreateSecretaria(event: FormEvent<HTMLFormElement>) {
@@ -265,6 +685,8 @@ export function useAlmoxarifado() {
       setNotice("Preencha todos os dados da secretaria.");
       return;
     }
+
+    setPendingAction("secretaria");
 
     if (editingSecretariaId) {
       const previousSecretaria = secretarias.find((secretaria) => secretaria.id === editingSecretariaId);
@@ -306,12 +728,14 @@ export function useAlmoxarifado() {
         );
         setUsuarioForm((current) => ({
           ...current,
-          siglaSecretaria: current.siglaSecretaria === previousSecretaria.sigla ? payload.sigla : current.siglaSecretaria,
+          siglaSecretaria:
+            current.siglaSecretaria === previousSecretaria.sigla ? payload.sigla : current.siglaSecretaria,
         }));
       }
 
       setEditingSecretariaId(null);
       setSecretariaForm({ nome: "", sigla: "", endereco: "", cep: "" });
+      setPendingAction(null);
       return;
     }
 
@@ -323,14 +747,20 @@ export function useAlmoxarifado() {
 
       setSecretarias((current) => [created, ...current]);
       setUsuarioForm((current) => ({ ...current, siglaSecretaria: current.siglaSecretaria || payload.sigla }));
+      setProdutoForm((current) => ({
+        ...current,
+        secretariaCadastrada: current.secretariaCadastrada || created.id,
+      }));
       setApiMode("sincronizado");
       setNotice("Secretaria cadastrada na API.");
     } catch (error) {
+      const localId = createLocalId("secretaria");
       setSecretarias((current) => [
-        { id: createLocalId("secretaria"), ...payload, createdAt: new Date().toISOString().slice(0, 10) },
+        { id: localId, ...payload, createdAt: new Date().toISOString().slice(0, 10) },
         ...current,
       ]);
       setUsuarioForm((current) => ({ ...current, siglaSecretaria: current.siglaSecretaria || payload.sigla }));
+      setProdutoForm((current) => ({ ...current, secretariaCadastrada: current.secretariaCadastrada || localId }));
       setApiMode("local");
       setNotice(
         error instanceof Error ? `${error.message} Secretaria mantida localmente.` : "Secretaria mantida localmente.",
@@ -338,6 +768,7 @@ export function useAlmoxarifado() {
     }
 
     setSecretariaForm({ nome: "", sigla: "", endereco: "", cep: "" });
+    setPendingAction(null);
   }
 
   function handleEditSecretaria(secretaria: Secretaria) {
@@ -348,7 +779,7 @@ export function useAlmoxarifado() {
       endereco: secretaria.endereco,
       cep: secretaria.cep,
     });
-    setNotice("Editando secretaria selecionada.");
+    setNotice("Editando a secretaria selecionada.");
   }
 
   function handleCancelSecretariaEdit() {
@@ -371,6 +802,8 @@ export function useAlmoxarifado() {
         return;
       }
 
+      setPendingAction("usuario");
+
       try {
         await backendRequest<{ nome: string; email: string }>(`/v1/users/${editingUsuarioId}`, {
           method: "PUT",
@@ -382,9 +815,7 @@ export function useAlmoxarifado() {
       } catch (error) {
         setApiMode("local");
         setNotice(
-          error instanceof Error
-            ? `${error.message} Usuário atualizado localmente.`
-            : "Usuário atualizado localmente.",
+          error instanceof Error ? `${error.message} Usuário atualizado localmente.` : "Usuário atualizado localmente.",
         );
       }
 
@@ -399,6 +830,7 @@ export function useAlmoxarifado() {
         cpf: "",
         senha: "",
       });
+      setPendingAction(null);
       return;
     }
 
@@ -415,6 +847,8 @@ export function useAlmoxarifado() {
       return;
     }
 
+    setPendingAction("usuario");
+
     try {
       const created = await backendRequest<Usuario>("/v1/users", {
         method: "POST",
@@ -422,12 +856,14 @@ export function useAlmoxarifado() {
       });
 
       setUsuarios((current) => [created, ...current]);
+      setProdutoForm((current) => ({ ...current, usuarioCadastrado: current.usuarioCadastrado || created.id }));
       setApiMode("sincronizado");
       setNotice("Usuário cadastrado na API.");
     } catch (error) {
+      const localId = createLocalId("usuario");
       setUsuarios((current) => [
         {
-          id: createLocalId("usuario"),
+          id: localId,
           siglaSecretaria: payload.siglaSecretaria,
           nome: payload.nome,
           email: payload.email,
@@ -436,8 +872,11 @@ export function useAlmoxarifado() {
         },
         ...current,
       ]);
+      setProdutoForm((current) => ({ ...current, usuarioCadastrado: current.usuarioCadastrado || localId }));
       setApiMode("local");
-      setNotice(error instanceof Error ? `${error.message} Usuário mantido localmente.` : "Usuário mantido localmente.");
+      setNotice(
+        error instanceof Error ? `${error.message} Usuário mantido localmente.` : "Usuário mantido localmente.",
+      );
     }
 
     setUsuarioForm({
@@ -447,6 +886,7 @@ export function useAlmoxarifado() {
       cpf: "",
       senha: "",
     });
+    setPendingAction(null);
   }
 
   function handleEditUsuario(usuario: Usuario) {
@@ -458,7 +898,7 @@ export function useAlmoxarifado() {
       cpf: "",
       senha: "",
     });
-    setNotice("Editando usuário selecionado. O back-end permite alterar apenas nome e e-mail.");
+    setNotice("Editando o usuário selecionado. O back-end permite alterar apenas nome e e-mail.");
   }
 
   function handleCancelUsuarioEdit() {
@@ -474,13 +914,13 @@ export function useAlmoxarifado() {
   }
 
   function handlePedidoProdutoChange(idProduto: string) {
-    const item = itemById.get(idProduto);
+    const produto = produtoById.get(idProduto);
 
     setPedidoForm((current) => ({
       ...current,
       idProduto,
-      nomeProduto: item?.name ?? current.nomeProduto,
-      descricaoProduto: item?.description ?? current.descricaoProduto,
+      nomeProduto: produto?.nome ?? current.nomeProduto,
+      descricaoProduto: produto?.descricao ?? current.descricaoProduto,
     }));
   }
 
@@ -505,17 +945,19 @@ export function useAlmoxarifado() {
       !payload.nomeProduto ||
       !payload.idUsuario ||
       !payload.idSecretaria ||
-      Number.isNaN(payload.quantidade) ||
+      !Number.isFinite(payload.quantidade) ||
       payload.quantidade <= 0 ||
-      Number.isNaN(payload.preco) ||
+      !Number.isFinite(payload.preco) ||
       payload.preco < 0
     ) {
       setNotice("Preencha produto, solicitante, secretaria, quantidade e preço do pedido.");
       return;
     }
 
+    setPendingAction("pedido");
+
     try {
-      const created = await backendRequest<PedidoCompra>("/api/pedidos-compra", {
+      const created = await backendRequest<PedidoCompra>("/v1/pedidos-compra", {
         method: "POST",
         body: JSON.stringify(payload),
       });
@@ -524,81 +966,234 @@ export function useAlmoxarifado() {
       setApiMode("sincronizado");
       setNotice("Pedido de compra cadastrado na API.");
     } catch (error) {
-      setPedidos((current) => [
-        {
-          ...payload,
-          idPedidoCompra: createLocalId("pedido"),
-        },
-        ...current,
-      ]);
+      setPedidos((current) => [{ ...payload, idPedidoCompra: createLocalId("pedido") }, ...current]);
       setApiMode("local");
       setNotice(error instanceof Error ? `${error.message} Pedido mantido localmente.` : "Pedido mantido localmente.");
     }
 
-    setPedidoForm((current) => ({
+    setPedidoForm((current) => ({ ...current, descricaoPedido: "", quantidade: "", preco: "" }));
+    setPendingAction(null);
+  }
+
+  function handleAddTransferenciaItem() {
+    const selectedIds = new Set(transferenciaForm.itens.map((item) => item.produtoId));
+    const nextProduto = produtos.find((produto) => !selectedIds.has(produto.id)) ?? produtos[0];
+
+    setTransferenciaForm((current) => ({
       ...current,
-      descricaoPedido: "",
-      quantidade: "",
-      preco: "",
+      itens: [...current.itens, createTransferenciaItem(nextProduto?.id)],
     }));
   }
 
-  async function handleDeletePedido(idPedidoCompra: string) {
+  function handleTransferenciaItemChange(
+    index: number,
+    field: keyof ItemTransferenciaForm,
+    value: string,
+  ) {
+    setTransferenciaForm((current) => ({
+      ...current,
+      itens: current.itens.map((item, itemIndex) => (itemIndex === index ? { ...item, [field]: value } : item)),
+    }));
+  }
+
+  function handleRemoveTransferenciaItem(index: number) {
+    setTransferenciaForm((current) => ({
+      ...current,
+      itens:
+        current.itens.length === 1
+          ? [createTransferenciaItem(produtos[0]?.id)]
+          : current.itens.filter((_, itemIndex) => itemIndex !== index),
+    }));
+  }
+
+  async function handleCreateTransferencia(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const itens = transferenciaForm.itens.map((item) => ({
+      produtoId: item.produtoId,
+      quantidade: Number(item.quantidade),
+    }));
+    const payload = {
+      descricaoPedido: transferenciaForm.descricaoPedido.trim(),
+      razaoSocial: transferenciaForm.razaoSocial.trim(),
+      usuarioId: transferenciaForm.usuarioId,
+      secretariaId: transferenciaForm.secretariaId,
+      itens,
+    };
+    const produtosUnicos = new Set(itens.map((item) => item.produtoId));
+
+    if (payload.descricaoPedido.length < 40 || payload.razaoSocial.length < 40) {
+      setNotice("A descrição e a razão social devem ter pelo menos 40 caracteres.");
+      return;
+    }
+
+    if (
+      !payload.usuarioId ||
+      !payload.secretariaId ||
+      itens.length === 0 ||
+      itens.some((item) => !item.produtoId || !Number.isFinite(item.quantidade) || item.quantidade <= 0)
+    ) {
+      setNotice("Preencha o solicitante, a secretaria e os produtos da transferência.");
+      return;
+    }
+
+    if (produtosUnicos.size !== itens.length) {
+      setNotice("Cada produto deve aparecer apenas uma vez no pedido de transferência.");
+      return;
+    }
+
+    setPendingAction("transferencia");
+
     try {
-      await backendRequest<void>(`/api/pedidos-compra/${idPedidoCompra}`, {
-        method: "DELETE",
+      const created = await backendRequest<PedidoTransferencia>("/v1/pedidos-transferencia", {
+        method: "POST",
+        body: JSON.stringify(payload),
       });
 
-      setPedidos((current) => current.filter((pedido) => pedido.idPedidoCompra !== idPedidoCompra));
+      setTransferencias((current) => [created, ...current]);
+      setItensTransferencia((current) => [...created.itens, ...current]);
       setApiMode("sincronizado");
-      setNotice("Pedido removido da API.");
+      setNotice(
+        created.status === "CANCELADO"
+          ? created.motivoCancelamento || "Transferência cancelada pela API."
+          : "Pedido de transferência cadastrado na API.",
+      );
     } catch (error) {
-      setPedidos((current) => current.filter((pedido) => pedido.idPedidoCompra !== idPedidoCompra));
+      const transferenciaId = createLocalId("transferencia");
+      const estoqueInsuficiente = itens.some(
+        (item) => (produtoById.get(item.produtoId)?.quantidade ?? 0) < item.quantidade,
+      );
+      const localItens = itens.map<ItemPedidoTransferencia>((item) => ({
+        id: createLocalId("item-transferencia"),
+        pedidoTransferencia: transferenciaId,
+        produto: item.produtoId,
+        quantidade: item.quantidade,
+      }));
+      const localTransferencia: PedidoTransferencia = {
+        id: transferenciaId,
+        ...payload,
+        status: estoqueInsuficiente ? "CANCELADO" : "ABERTO",
+        motivoCancelamento: estoqueInsuficiente ? "Estoque local insuficiente para um ou mais produtos." : null,
+        itens: localItens,
+      };
+
+      setTransferencias((current) => [localTransferencia, ...current]);
+      setItensTransferencia((current) => [...localItens, ...current]);
       setApiMode("local");
-      setNotice(error instanceof Error ? `${error.message} Pedido removido localmente.` : "Pedido removido localmente.");
+      setNotice(
+        error instanceof Error
+          ? `${error.message} Transferência mantida localmente.`
+          : "Transferência mantida localmente.",
+      );
+    }
+
+    setTransferenciaForm((current) => ({
+      ...current,
+      descricaoPedido: "",
+      razaoSocial: "",
+      itens: [createTransferenciaItem(produtos[0]?.id)],
+    }));
+    setPendingAction(null);
+  }
+
+  async function handleTransferenciaStatusChange(id: string, status: TransferenciaStatus) {
+    setPendingAction(`transferencia-status-${id}`);
+
+    try {
+      const updated = await backendRequest<PedidoTransferencia>(`/v1/pedidos-transferencia/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      });
+
+      setTransferencias((current) =>
+        current.map((transferencia) => (transferencia.id === id ? updated : transferencia)),
+      );
+      setApiMode("sincronizado");
+      setNotice("Status da transferência atualizado na API.");
+    } catch (error) {
+      setTransferencias((current) =>
+        current.map((transferencia) => (transferencia.id === id ? { ...transferencia, status } : transferencia)),
+      );
+      setApiMode("local");
+      setNotice(
+        error instanceof Error
+          ? `${error.message} Status atualizado localmente.`
+          : "Status atualizado localmente.",
+      );
+    } finally {
+      setPendingAction(null);
     }
   }
 
   return {
     activeTab,
+    activeTransferencias,
     apiStatusLabel,
+    authReady,
+    authSession,
+    editingProdutoId,
     editingSecretariaId,
     editingUsuarioId,
-    filteredItems,
     filteredPedidos,
+    filteredProdutos,
     filteredSecretarias,
+    filteredTransferencias,
     filteredUsuarios,
+    handleAddTransferenciaItem,
+    handleCancelProdutoEdit,
     handleCancelSecretariaEdit,
     handleCancelUsuarioEdit,
-    handleCreateItem,
+    handleChangePassword,
     handleCreatePedido,
+    handleCreateProduto,
     handleCreateSecretaria,
+    handleCreateTransferencia,
     handleCreateUsuario,
-    handleDeletePedido,
+    handleEditProduto,
     handleEditSecretaria,
     handleEditUsuario,
     handlePedidoProdutoChange,
-    itemForm,
-    items,
+    handleLogin,
+    handleLogout,
+    handleRemoveTransferenciaItem,
+    handleTransferenciaItemChange,
+    handleTransferenciaStatusChange,
+    itensTransferencia,
+    itensTransferenciaByPedido,
+    isLoadingData,
+    loginForm,
     lowStock,
     notice,
     pedidoForm,
     pedidoStatusFilter,
     pedidos,
+    passwordForm,
+    pendingAction,
     pendingPedidos,
+    produtoById,
+    produtoForm,
+    produtos,
     query,
     secretariaById,
     secretariaForm,
     secretarias,
-    setActiveTab,
-    setItemForm,
+    setActiveTab: handleTabChange,
+    setLoginForm,
     setPedidoForm,
     setPedidoStatusFilter,
+    setPasswordForm,
+    setProdutoForm,
     setQuery,
     setSecretariaForm,
+    setTransferenciaForm,
+    setTransferenciaStatusFilter,
     setUsuarioForm,
     totalItems,
     totalPedidoValue,
+    totalTransferenciaValue,
+    transferenciaForm,
+    transferenciaStatusFilter,
+    transferencias,
     usuarioById,
     usuarioForm,
     usuarios,
