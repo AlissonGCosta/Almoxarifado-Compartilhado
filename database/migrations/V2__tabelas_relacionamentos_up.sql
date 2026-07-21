@@ -68,8 +68,8 @@ CREATE TABLE IF NOT EXISTS produtos(
 	descricao TEXT NOT NULL,
 	quantidade NUMERIC(12,3) NOT NULL,
 	preco NUMERIC(10,2) NOT NULL,
-	createdAt TIMESTAMPTZ NOT NULL,
-	updatedAt TIMESTAMPTZ NOT NULL,
+	creadoEm TIMESTAMPTZ NOT NULL,
+	atualizadoEm TIMESTAMPTZ NOT NULL,
 	status status_produto NOT NULL,
 	tipo tipo_produto NOT NULL,
 	id_usuario_cadastrado UUID NOT NULL,
@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS pedidos_compra(
 	status status_pedido_compra NOT NULL,
 	id_usuario UUID NOT NULL,
 	id_secretaria UUID NOT NULL,
-	creadoEm TIMESTAMPTZ,
+	creadoEm TIMESTAMPTZ NOT NULL,
 	motivo_cancelamento VARCHAR(255),
 
 	--cria a chave primária para a tabela pedidos_compra
