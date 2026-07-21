@@ -37,13 +37,13 @@ VALUES ('d4444444-4444-4444-4444-444444444444', 'Cargo Invalido', '99999999999',
 -- 3. TESTES NA TABELA: produtos
 
 -- Falha: Violação de CHECK (quantidade igual a 0 ou negativa)
-INSERT INTO produtos (id_produto, nome_produto, descricao, quantidade, preco, createdAt, updatedAt, status, tipo,
+INSERT INTO produtos (id_produto, nome_produto, descricao, quantidade, preco, creadoEm, atualizadoEm, status, tipo,
 id_usuario_cadastrado, id_secretaria_cadastrada)
 VALUES ('e1111111-1111-1111-1111-111111111111', 'Mouse', 'Mouse sem fio', 0.000, 150.00, NOW(), NOW(), 'Novo', 'Comprado',
 '33333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111');
 
 -- Falha: Violação de CHECK (preco igual a 0 ou negativo)
-INSERT INTO produtos (id_produto, nome_produto, descricao, quantidade, preco, createdAt, updatedAt, status, tipo,
+INSERT INTO produtos (id_produto, nome_produto, descricao, quantidade, preco, creadoEm ,atualizadoem, status, tipo,
 id_usuario_cadastrado, id_secretaria_cadastrada)
 VALUES ('e2222222-2222-2222-2222-222222222222', 'Teclado', 'Teclado Mecânico', 10.000, -50.00, NOW(), NOW(), 'Novo', 'Comprado',
 '33333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111');
