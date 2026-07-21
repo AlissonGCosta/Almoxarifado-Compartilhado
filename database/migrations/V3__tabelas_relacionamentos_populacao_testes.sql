@@ -16,7 +16,7 @@ VALUES
 
 
 -- 2. Inserir Produtos (Depende de secretarias e usuarios)
-INSERT INTO produtos (id_produto, nome_produto, descricao, quantidade, preco, createdAt, updatedAt, status,
+INSERT INTO produtos (id_produto, nome_produto, descricao, quantidade, preco, creadoEm, atualizadoEm, status,
 tipo, id_usuario_cadastrado, id_secretaria_cadastrada)
 VALUES
 
