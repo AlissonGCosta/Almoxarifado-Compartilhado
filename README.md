@@ -9,6 +9,7 @@ front-end e o back-end em um único repositório.
 .
 ├── frontend/   # Aplicação web
 └── backend/    # API (a ser adicionada)
+└── database/   
 ```
 
 ## Front-end
@@ -160,3 +161,57 @@ Execute os comandos dentro de `backend/`.
 | `mvn test` | Executa os testes |
 | `mvn clean` | Remove os arquivos gerados |
 | `mvn clean install` | Compila e instala as dependências |
+
+
+## Banco de Dados
+
+Este diretório é dedicado à arquitetura, modelagem e documentação do banco de dados do sistema de almoxarifado. Ele está localizada em [`database/`](./database).
+
+## Tecnologias e Ferramentas
+
+| Tecnologia / Ferramenta | Descrição / Uso |
+| :--- | :--- |
+| **PostgreSQL** | SGBD Relacional principal da aplicação. |
+| **Docker & Compose** | Utilizado para provisionamento do ambiente local. |
+| **Flyway** | Ferramenta de versionamento e migração de dados (Migrations). |
+| **Spring Data JPA** | ORM utilizado no back-end para mapeamento (Java/Spring Boot). |
+| **DBeaver** | Cliente SQL recomendado para administração e testes locais. |
+
+## Executando localmente
+
+### Pré-requisitos:
+* Docker
+* Docker Compose
+* DBeaver (ou outro cliente SQL de sua preferência)
+
+### Suba o PostgreSQL local:
+Para iniciar o banco de dados via container, navegue até o diretório onde se encontra o arquivo `docker-compose.yml` e execute:
+
+```bash
+docker compose up -d
+```
+
+Se o Docker Compose estiver instalado como binário legado:
+
+```bash
+docker-compose up -d
+```
+
+### Credenciais de Conexão Local
+
+Configure seu DBeaver com os seguintes parâmetros padrão de desenvolvimento para acessar o banco recém-criado:
+
+| Parâmetro (DBeaver) | Valor |
+| :--- | :--- |
+| **Host** | `localhost` |
+| **Porta (POSTGRES_PORT)** | `5432` |
+| **Database (POSTGRES_DB)** | `almoxarifado` |
+| **Username (POSTGRES_USER)**| `almoxarifado` |
+| **Password (POSTGRES_PASSWORD)** | `almoxarifado` |
+
+<!-- ## Integração com Back-end (Flyway & ORM)
+
+Embora a documentação e os scripts de modelagem residam nesta pasta, a gestão automatizada do banco é feita pelo back-end (Spring Boot):
+
+* **JPA/Hibernate:** Responsável por mapear as entidades Java para as tabelas documentadas aqui.
+* **Flyway:** O Spring Boot executará automaticamente as migrations (scripts SQL) na inicialização da aplicação para garantir que o banco de dados `almoxarifado` esteja sempre na versão correta. As migrations oficiais geralmente ficam em `backend/src/main/resources/db/migration/`.-->
