@@ -4,10 +4,6 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Almoxarifado Compartilhado",
   description: "Gestão municipal de bens e materiais compartilhados",
-  icons: {
-    icon: [{ url: "/favicon.png", type: "image/png" }],
-    shortcut: "/favicon.png",
-  },
 };
 
 export default function RootLayout({
