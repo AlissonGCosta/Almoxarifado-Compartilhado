@@ -1,28 +1,24 @@
+```
 # Dependencies
-node_modules/
+target/
+.m2/
+.gradle/
 
-# Build outputs
-dist/
-build/
-coverage/
+# Logs and temp files
+*.log
+*.tmp
 
-# Environment files
+# Environment
 .env
 .env.local
-.env.*.local
+*.env.*
 
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# Editor and operating system files
+# Editors
 .vscode/
 .idea/
-.DS_Store
-Thumbs.db
 
-#text
- .zed/
+# Build artifacts
+*.class
+*.jar
+*.war
+```
