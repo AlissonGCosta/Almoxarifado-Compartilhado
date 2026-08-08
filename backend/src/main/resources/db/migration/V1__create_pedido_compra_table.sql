@@ -14,7 +14,7 @@ CREATE TABLE pedidos_compra (
     motivo_cancelamento TEXT,
     data_criacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     data_atualizacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_pedidos_compra_produto FOREIGN KEY (id_produto) REFERENCES item (id),
+    CONSTRAINT fk_pedidos_compra_produto FOREIGN KEY (id_produto) REFERENCES produtos (id),
     CONSTRAINT fk_pedidos_compra_usuario FOREIGN KEY (id_usuario) REFERENCES users (id),
     CONSTRAINT fk_pedidos_compra_secretaria FOREIGN KEY (id_secretaria) REFERENCES secretarias (id),
     CONSTRAINT ck_pedidos_compra_cancelamento CHECK (

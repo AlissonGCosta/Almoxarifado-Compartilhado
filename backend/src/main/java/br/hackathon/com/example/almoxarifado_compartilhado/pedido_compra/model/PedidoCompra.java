@@ -1,6 +1,6 @@
 package br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.model;
 
-import br.hackathon.com.example.almoxarifado_compartilhado.item.entity.Item;
+import br.hackathon.com.example.almoxarifado_compartilhado.produto.entity.ProdutoEntity;
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.entity.SecretariaEntity;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.entity.UserEntity;
 import jakarta.persistence.Column;
@@ -43,7 +43,7 @@ public class PedidoCompra {
     @NotNull(message = "Produto é obrigatório")
     @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_produto", nullable = false)
-    private Item produto;
+    private ProdutoEntity produto;
 
     @NotBlank(message = "Nome do produto é obrigatório")
     @Column(name = "nome_produto", nullable = false)

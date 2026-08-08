@@ -3,11 +3,11 @@ package br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.servic
 import br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.dto.PedidoCompraDTO;
 import br.hackathon.com.example.almoxarifado_compartilhado.exception.BusinessException;
 import br.hackathon.com.example.almoxarifado_compartilhado.exception.RessourceNotFoundException;
-import br.hackathon.com.example.almoxarifado_compartilhado.item.entity.Item;
-import br.hackathon.com.example.almoxarifado_compartilhado.item.repository.ItemRepository;
 import br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.model.PedidoCompra;
 import br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.model.PedidoStatus;
 import br.hackathon.com.example.almoxarifado_compartilhado.pedido_compra.repository.PedidoCompraRepository;
+import br.hackathon.com.example.almoxarifado_compartilhado.produto.entity.ProdutoEntity;
+import br.hackathon.com.example.almoxarifado_compartilhado.produto.repository.ProdutoRepository;
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.entity.SecretariaEntity;
 import br.hackathon.com.example.almoxarifado_compartilhado.secretaria.repository.SecretariasRepository;
 import br.hackathon.com.example.almoxarifado_compartilhado.users.entity.UserEntity;
@@ -26,7 +26,7 @@ import java.util.UUID;
 public class PedidoCompraService {
 
     private final PedidoCompraRepository pedidoCompraRepository;
-    private final ItemRepository itemRepository;
+    private final ProdutoRepository produtoRepository;
     private final UserRepository userRepository;
     private final SecretariasRepository secretariasRepository;
 
@@ -98,11 +98,11 @@ public class PedidoCompraService {
                 .orElseThrow(() -> new RessourceNotFoundException("Pedido de compra não encontrado: " + id));
     }
 
-    private Item buscarProduto(UUID idProduto) {
+    private ProdutoEntity buscarProduto(UUID idProduto) {
         if (idProduto == null) {
             throw new BusinessException("Produto é obrigatório");
         }
-        return itemRepository.findById(idProduto)
+        return produtoRepository.findById(idProduto)
                 .orElseThrow(() -> new RessourceNotFoundException("Produto não encontrado: " + idProduto));
     }
 
