@@ -29,10 +29,9 @@ public class SecurityConfig {
                .authorizeHttpRequests(auth -> auth
                        .requestMatchers("/h2-console/**").permitAll()
                        .requestMatchers("/api/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                       .requestMatchers(HttpMethod.POST, "/v1/**").permitAll()
-                       .requestMatchers(HttpMethod.GET, "/v1/**").permitAll()
-                       .requestMatchers(HttpMethod.PUT, "/v1/**").permitAll()
-                       .requestMatchers(HttpMethod.PATCH, "/v1/**").permitAll()
+                       .requestMatchers("/v1/auth/**").permitAll()
+                       .requestMatchers(HttpMethod.DELETE, "/v1/**").authenticated()
+                       .anyRequest().authenticated()
                )
                .exceptionHandling(ex -> ex
                        .authenticationEntryPoint(authenticationEntryPoint())
