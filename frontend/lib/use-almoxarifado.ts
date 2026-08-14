@@ -10,14 +10,6 @@ import {
 } from "@/lib/auth";
 import { BackendError, backendRequest } from "@/lib/api";
 import { createLocalId } from "@/lib/formatters";
-import {
-  initialItensTransferencia,
-  initialPedidos,
-  initialProdutos,
-  initialSecretarias,
-  initialTransferencias,
-  initialUsuarios,
-} from "@/lib/mock-data";
 import type {
   ApiMode,
   AuthResponse,
@@ -66,13 +58,13 @@ export function useAlmoxarifado() {
   const [authReady, setAuthReady] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
-  const [produtos, setProdutos] = useState<Produto[]>(initialProdutos);
-  const [secretarias, setSecretarias] = useState<Secretaria[]>(initialSecretarias);
-  const [usuarios, setUsuarios] = useState<Usuario[]>(initialUsuarios);
-  const [pedidos, setPedidos] = useState<PedidoCompra[]>(initialPedidos);
-  const [transferencias, setTransferencias] = useState<PedidoTransferencia[]>(initialTransferencias);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [secretarias, setSecretarias] = useState<Secretaria[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [pedidos, setPedidos] = useState<PedidoCompra[]>([]);
+  const [transferencias, setTransferencias] = useState<PedidoTransferencia[]>([]);
   const [itensTransferencia, setItensTransferencia] =
-    useState<ItemPedidoTransferencia[]>(initialItensTransferencia);
+    useState<ItemPedidoTransferencia[]>([]);
   const [apiMode, setApiMode] = useState<ApiMode>("verificando");
   const [notice, setNotice] = useState("Conectando aos serviços do almoxarifado.");
   const [query, setQuery] = useState("");
@@ -91,7 +83,7 @@ export function useAlmoxarifado() {
   });
 
   const [produtoForm, setProdutoForm] = useState<ProdutoForm>(
-    createProdutoForm(initialUsuarios[0]?.id, initialSecretarias[0]?.id),
+    createProdutoForm("", ""),
   );
 
   const [secretariaForm, setSecretariaForm] = useState<SecretariaForm>({
@@ -102,7 +94,7 @@ export function useAlmoxarifado() {
   });
 
   const [usuarioForm, setUsuarioForm] = useState<UsuarioForm>({
-    siglaSecretaria: initialSecretarias[0]?.sigla ?? "",
+    siglaSecretaria: "",
     nome: "",
     email: "",
     cpf: "",
@@ -110,22 +102,22 @@ export function useAlmoxarifado() {
   });
 
   const [pedidoForm, setPedidoForm] = useState<PedidoCompraForm>({
-    idProduto: initialProdutos[0]?.id ?? "",
-    nomeProduto: initialProdutos[0]?.nome ?? "",
-    descricaoProduto: initialProdutos[0]?.descricao ?? "",
+    idProduto: "",
+    nomeProduto: "",
+    descricaoProduto: "",
     descricaoPedido: "",
     quantidade: "",
     preco: "",
-    idUsuario: initialUsuarios[0]?.id ?? "",
-    idSecretaria: initialSecretarias[0]?.id ?? "",
+    idUsuario: "",
+    idSecretaria: "",
   });
 
   const [transferenciaForm, setTransferenciaForm] = useState<PedidoTransferenciaForm>({
     descricaoPedido: "",
     razaoSocial: "",
-    usuarioId: initialUsuarios[0]?.id ?? "",
-    secretariaId: initialSecretarias[0]?.id ?? "",
-    itens: [createTransferenciaItem(initialProdutos[0]?.id)],
+    usuarioId: "",
+    secretariaId: "",
+    itens: [createTransferenciaItem("")],
   });
 
   useEffect(() => {
@@ -300,9 +292,9 @@ export function useAlmoxarifado() {
       setNotice(
         loadedSomething
           ? failedSomething
-            ? "Parte dos dados foi sincronizada; as rotas indisponíveis usam dados locais."
+            ? "Parte dos dados foi sincronizada; falha ao carregar algumas rotas."
             : "Dados sincronizados com as APIs disponíveis."
-          : "API indisponível; interface operando com dados locais.",
+          : "API indisponível; verifique a conexão com o back-end.",
       );
       setIsLoadingData(false);
     }
@@ -466,7 +458,7 @@ export function useAlmoxarifado() {
   const apiStatusLabel = {
     verificando: "Verificando API",
     sincronizado: "API conectada",
-    local: "Modo local",
+    local: "Desconectado",
   }[apiMode];
 
   function handleTabChange(tab: TabId) {
@@ -603,21 +595,13 @@ export function useAlmoxarifado() {
         setApiMode("sincronizado");
         setNotice("Produto atualizado na API.");
       } catch (error) {
-        setProdutos((current) =>
-          current.map((produto) =>
-            produto.id === editingProdutoId
-              ? { ...produto, ...payload, updatedAt: new Date().toISOString().slice(0, 10) }
-              : produto,
-          ),
-        );
-        setApiMode("local");
         setNotice(
-          error instanceof Error ? `${error.message} Produto atualizado localmente.` : "Produto atualizado localmente.",
+          error instanceof Error ? error.message : "Erro ao atualizar produto.",
         );
       }
 
       setEditingProdutoId(null);
-      setProdutoForm(createProdutoForm(usuarios[0]?.id, secretarias[0]?.id));
+      setProdutoForm(createProdutoForm("", ""));
       setPendingAction(null);
       return;
     }
@@ -632,17 +616,8 @@ export function useAlmoxarifado() {
       setApiMode("sincronizado");
       setNotice("Produto cadastrado na API.");
     } catch (error) {
-      setProdutos((current) => [
-        {
-          id: createLocalId("produto"),
-          ...payload,
-          createdAt: new Date().toISOString().slice(0, 10),
-        },
-        ...current,
-      ]);
-      setApiMode("local");
       setNotice(
-        error instanceof Error ? `${error.message} Produto mantido localmente.` : "Produto mantido localmente.",
+        error instanceof Error ? error.message : "Erro ao cadastrar produto.",
       );
     }
 
@@ -667,7 +642,7 @@ export function useAlmoxarifado() {
 
   function handleCancelProdutoEdit() {
     setEditingProdutoId(null);
-    setProdutoForm(createProdutoForm(usuarios[0]?.id, secretarias[0]?.id));
+    setProdutoForm(createProdutoForm("", ""));
     setNotice("Edição de produto cancelada.");
   }
 
@@ -706,12 +681,10 @@ export function useAlmoxarifado() {
         setApiMode("sincronizado");
         setNotice("Secretaria atualizada na API.");
       } catch (error) {
-        setApiMode("local");
         setNotice(
-          error instanceof Error
-            ? `${error.message} Secretaria atualizada localmente.`
-            : "Secretaria atualizada localmente.",
+          error instanceof Error ? error.message : "Erro ao atualizar secretaria.",
         );
+        return;
       }
 
       setSecretarias((current) =>
@@ -754,16 +727,8 @@ export function useAlmoxarifado() {
       setApiMode("sincronizado");
       setNotice("Secretaria cadastrada na API.");
     } catch (error) {
-      const localId = createLocalId("secretaria");
-      setSecretarias((current) => [
-        { id: localId, ...payload, createdAt: new Date().toISOString().slice(0, 10) },
-        ...current,
-      ]);
-      setUsuarioForm((current) => ({ ...current, siglaSecretaria: current.siglaSecretaria || payload.sigla }));
-      setProdutoForm((current) => ({ ...current, secretariaCadastrada: current.secretariaCadastrada || localId }));
-      setApiMode("local");
       setNotice(
-        error instanceof Error ? `${error.message} Secretaria mantida localmente.` : "Secretaria mantida localmente.",
+        error instanceof Error ? error.message : "Erro ao cadastrar secretaria.",
       );
     }
 
@@ -813,10 +778,10 @@ export function useAlmoxarifado() {
         setApiMode("sincronizado");
         setNotice("Usuário atualizado na API.");
       } catch (error) {
-        setApiMode("local");
         setNotice(
-          error instanceof Error ? `${error.message} Usuário atualizado localmente.` : "Usuário atualizado localmente.",
+          error instanceof Error ? error.message : "Erro ao atualizar usuário.",
         );
+        return;
       }
 
       setUsuarios((current) =>
@@ -860,22 +825,8 @@ export function useAlmoxarifado() {
       setApiMode("sincronizado");
       setNotice("Usuário cadastrado na API.");
     } catch (error) {
-      const localId = createLocalId("usuario");
-      setUsuarios((current) => [
-        {
-          id: localId,
-          siglaSecretaria: payload.siglaSecretaria,
-          nome: payload.nome,
-          email: payload.email,
-          roles: "ROLE_USER",
-          createdAt: new Date().toISOString().slice(0, 10),
-        },
-        ...current,
-      ]);
-      setProdutoForm((current) => ({ ...current, usuarioCadastrado: current.usuarioCadastrado || localId }));
-      setApiMode("local");
       setNotice(
-        error instanceof Error ? `${error.message} Usuário mantido localmente.` : "Usuário mantido localmente.",
+        error instanceof Error ? error.message : "Erro ao cadastrar usuário.",
       );
     }
 
@@ -904,7 +855,7 @@ export function useAlmoxarifado() {
   function handleCancelUsuarioEdit() {
     setEditingUsuarioId(null);
     setUsuarioForm({
-      siglaSecretaria: secretarias[0]?.sigla ?? "",
+      siglaSecretaria: "",
       nome: "",
       email: "",
       cpf: "",
@@ -966,9 +917,9 @@ export function useAlmoxarifado() {
       setApiMode("sincronizado");
       setNotice("Pedido de compra cadastrado na API.");
     } catch (error) {
-      setPedidos((current) => [{ ...payload, idPedidoCompra: createLocalId("pedido") }, ...current]);
-      setApiMode("local");
-      setNotice(error instanceof Error ? `${error.message} Pedido mantido localmente.` : "Pedido mantido localmente.");
+      setNotice(
+        error instanceof Error ? error.message : "Erro ao cadastrar pedido.",
+      );
     }
 
     setPedidoForm((current) => ({ ...current, descricaoPedido: "", quantidade: "", preco: "" }));
@@ -1059,31 +1010,8 @@ export function useAlmoxarifado() {
           : "Pedido de transferência cadastrado na API.",
       );
     } catch (error) {
-      const transferenciaId = createLocalId("transferencia");
-      const estoqueInsuficiente = itens.some(
-        (item) => (produtoById.get(item.produtoId)?.quantidade ?? 0) < item.quantidade,
-      );
-      const localItens = itens.map<ItemPedidoTransferencia>((item) => ({
-        id: createLocalId("item-transferencia"),
-        pedidoTransferencia: transferenciaId,
-        produto: item.produtoId,
-        quantidade: item.quantidade,
-      }));
-      const localTransferencia: PedidoTransferencia = {
-        id: transferenciaId,
-        ...payload,
-        status: estoqueInsuficiente ? "CANCELADO" : "ABERTO",
-        motivoCancelamento: estoqueInsuficiente ? "Estoque local insuficiente para um ou mais produtos." : null,
-        itens: localItens,
-      };
-
-      setTransferencias((current) => [localTransferencia, ...current]);
-      setItensTransferencia((current) => [...localItens, ...current]);
-      setApiMode("local");
       setNotice(
-        error instanceof Error
-          ? `${error.message} Transferência mantida localmente.`
-          : "Transferência mantida localmente.",
+        error instanceof Error ? error.message : "Erro ao cadastrar transferência.",
       );
     }
 
@@ -1091,7 +1019,7 @@ export function useAlmoxarifado() {
       ...current,
       descricaoPedido: "",
       razaoSocial: "",
-      itens: [createTransferenciaItem(produtos[0]?.id)],
+      itens: [createTransferenciaItem("")],
     }));
     setPendingAction(null);
   }
@@ -1111,14 +1039,8 @@ export function useAlmoxarifado() {
       setApiMode("sincronizado");
       setNotice("Status da transferência atualizado na API.");
     } catch (error) {
-      setTransferencias((current) =>
-        current.map((transferencia) => (transferencia.id === id ? { ...transferencia, status } : transferencia)),
-      );
-      setApiMode("local");
       setNotice(
-        error instanceof Error
-          ? `${error.message} Status atualizado localmente.`
-          : "Status atualizado localmente.",
+        error instanceof Error ? error.message : "Erro ao atualizar status.",
       );
     } finally {
       setPendingAction(null);

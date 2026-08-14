@@ -1,18 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #11121a;
-  --foreground: #f4f4f6;
-  --surface: #171821;
-  --surface-raised: #21222d;
-  --surface-soft: #282a35;
-  --border: #31333f;
-  --text: #f4f4f6;
-  --muted: #9a9ba4;
-  --accent: #a9dfd8;
-  --accent-strong: #77c8be;
-  --warning: #feb95a;
-  --danger: #ff8178;
+  --background: #f5f5f5;
+  --foreground: #000000;
+  --surface: #ffffff;
+  --surface-raised: #000000;
+  --border: #000000;
+  --text: #000000;
+  --muted: #737373;
+  --accent: #000000;
+  --accent-strong: #404040;
+  --warning: #f59e0b;
+  --danger: #ef4444;
 }
 
 @theme inline {
@@ -26,7 +25,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html {
@@ -55,7 +54,6 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
   outline: none !important;
-  box-shadow: none !important;
 }
 
 ::selection {
@@ -65,32 +63,34 @@ textarea:focus-visible {
 
 .form-input {
   width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: #191a23;
-  padding: 0.625rem 0.75rem;
+  border: 2px solid var(--border);
+  border-radius: 0;
+  background: #ffffff;
+  padding: 0.75rem;
   color: var(--text);
-  font-size: 0.875rem;
-  transition: border-color 150ms ease, background-color 150ms ease;
+  font-size: 1rem;
+  transition: all 150ms ease;
 }
 
 .form-input::placeholder {
-  color: #71727c;
+  color: #a3a3a3;
 }
 
 .form-input:hover {
-  border-color: #444652;
+  box-shadow: 2px 2px 0 0 #000;
 }
 
 .form-input:focus {
   border-color: var(--accent);
-  background: #1d1e28;
+  background: #ffffff;
   outline: none;
+  box-shadow: 4px 4px 0 0 #000;
 }
 
 .form-input:disabled {
   cursor: not-allowed;
   opacity: 0.65;
+  box-shadow: none;
 }
 
 .form-page-grid {
@@ -107,111 +107,4 @@ textarea:focus-visible {
 
 .form-page-grid > * + * {
   margin-top: 0;
-}
-
-/* Compatibilidade visual dos fluxos existentes com o novo tema. */
-.form-page-grid > form,
-.form-page-grid > section,
-.app-panel {
-  border-color: var(--border) !important;
-  background: var(--surface-raised) !important;
-}
-
-.form-page-grid article {
-  border-color: var(--border) !important;
-  background: var(--surface) !important;
-}
-
-.form-page-grid h2,
-.form-page-grid h3,
-.form-page-grid dd,
-.app-panel h2,
-.app-panel h3 {
-  color: var(--text) !important;
-}
-
-.form-page-grid p,
-.form-page-grid dt,
-.form-page-grid label,
-.form-page-grid span,
-.app-panel p {
-  border-color: var(--border);
-}
-
-.form-page-grid button[type="submit"] {
-  border-color: var(--accent) !important;
-  background: var(--accent) !important;
-  color: var(--surface) !important;
-}
-
-.form-page-grid button[type="submit"]:hover {
-  background: var(--accent-strong) !important;
-}
-
-.bg-white,
-.bg-\[\#fbfcfb\],
-.bg-\[\#f8faf8\] {
-  background-color: var(--surface-raised) !important;
-}
-
-.bg-\[\#eef5f1\],
-.bg-\[\#f1f5f2\],
-.bg-\[\#f3f6f4\] {
-  background-color: var(--surface-soft) !important;
-}
-
-.border-\[\#cbd8d0\],
-.border-\[\#dbe5df\],
-.border-\[\#e1e8e4\],
-.border-\[\#b9c8be\] {
-  border-color: var(--border) !important;
-}
-
-.text-\[\#10241e\] {
-  color: var(--text) !important;
-}
-
-.text-\[\#173f35\],
-.text-\[\#1f6b4f\],
-.text-\[\#2d6f58\],
-.text-\[\#315245\] {
-  color: var(--accent) !important;
-}
-
-.text-\[\#53645c\],
-.text-\[\#66766f\],
-.text-\[\#73827b\],
-.text-\[\#27443a\] {
-  color: var(--muted) !important;
-}
-
-.bg-\[\#173f35\],
-.bg-\[\#1f6b4f\] {
-  background-color: var(--accent) !important;
-  color: var(--surface) !important;
-}
-
-.bg-\[\#fff7db\] {
-  background-color: rgb(254 185 90 / 12%) !important;
-}
-
-.border-\[\#d5b35c\] {
-  border-color: rgb(254 185 90 / 48%) !important;
-}
-
-.text-\[\#6d5510\],
-.text-\[\#986b00\] {
-  color: var(--warning) !important;
-}
-
-.bg-\[\#fff1ef\] {
-  background-color: rgb(255 129 120 / 10%) !important;
-}
-
-.border-\[\#b84a42\] {
-  border-color: rgb(255 129 120 / 50%) !important;
-}
-
-.text-\[\#8d2f29\] {
-  color: var(--danger) !important;
 }

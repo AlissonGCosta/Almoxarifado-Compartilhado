@@ -16,14 +16,14 @@ export default function Home() {
 
   if (!app.authSession) {
     return (
-      <main className="min-h-screen bg-[#11121a] text-[#f4f4f6]">
+      <main className="min-h-screen bg-black text-white">
         <AcessoTab app={app} />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#11121a] text-[#f4f4f6] lg:flex">
+    <main className="min-h-screen bg-black text-white lg:flex">
       <AppSidebar activeTab={app.activeTab} authSession={app.authSession} setActiveTab={app.setActiveTab} />
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
@@ -31,7 +31,7 @@ export default function Home() {
 
         <div className="grid w-full flex-1 content-start gap-6 px-4 py-6 sm:px-6">
           {app.authSession && app.isLoadingData ? (
-            <p className="py-12 text-center text-sm font-semibold text-[#9a9ba4]">
+            <p className="py-12 text-center text-sm font-semibold text-neutral-400">
               Carregando dados do almoxarifado...
             </p>
           ) : (

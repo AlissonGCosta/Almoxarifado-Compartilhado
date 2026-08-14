@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import type { ReactNode } from "react";
 
 export function Metric({
@@ -12,24 +13,34 @@ export function Metric({
   tone?: "default" | "warn";
 }) {
   return (
-    <article className="min-h-32 rounded-lg border border-[#30323d] bg-[#171821] p-4">
-      <span className={`block h-1 w-8 rounded-full ${tone === "warn" ? "bg-[#feb95a]" : "bg-[#a9dfd8]"}`} />
-      <p className="mt-4 text-xs font-semibold text-[#9a9ba4]">{title}</p>
+    <motion.article 
+      whileHover={{ y: -4, x: -4, boxShadow: "8px 8px 0 0 #000" }}
+      transition={{ duration: 0.2 }}
+      className={`min-h-32 border-2 border-black p-6 shadow-[4px_4px_0_0_#000] ${
+        tone === "warn" ? "bg-black text-white" : "bg-white text-black"
+      }`}
+    >
+      <span className={`block h-1 w-12 ${tone === "warn" ? "bg-[#feb95a]" : "bg-black"}`} />
+      <p className={`mt-4 text-sm font-bold ${tone === "warn" ? "text-neutral-300" : "text-neutral-600"}`}>
+        {title}
+      </p>
       <div className="mt-2 flex items-end justify-between gap-3">
-        <strong className={`text-3xl font-black ${tone === "warn" ? "text-[#feb95a]" : "text-white"}`}>
+        <strong className={`text-5xl font-bold ${tone === "warn" ? "text-[#feb95a]" : "text-black"}`}>
           {value}
         </strong>
-        <span className="max-w-28 text-right text-xs font-semibold leading-5 text-[#a9dfd8]">{note}</span>
+        <span className={`max-w-28 text-right text-sm font-bold leading-5 ${tone === "warn" ? "text-neutral-300" : "text-neutral-500"}`}>
+          {note}
+        </span>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
 export function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <header className="border-b border-[#30323d] px-4 py-4 sm:px-5">
-      <h2 className="text-base font-bold text-white">{title}</h2>
-      <p className="mt-1 text-xs text-[#9a9ba4]">{subtitle}</p>
+    <header className="border-b-2 border-black px-6 py-6 sm:px-8">
+      <h2 className="text-3xl font-bold md:text-4xl">{title}</h2>
+      <p className="mt-2 text-sm font-bold text-neutral-600">{subtitle}</p>
     </header>
   );
 }
@@ -44,9 +55,9 @@ export function DataPanel({
   children: ReactNode;
 }) {
   return (
-    <section className="app-panel rounded-lg border border-[#30323d] bg-[#21222d]">
+    <section className="border-2 border-black bg-white text-black shadow-[8px_8px_0_0_#000]">
       <SectionHeader title={title} subtitle={subtitle} />
-      <div className="p-4">{children}</div>
+      <div className="p-6 sm:p-8">{children}</div>
     </section>
   );
 }
@@ -62,7 +73,7 @@ export function Field({
 }) {
   return (
     <label className={`grid gap-2 ${className}`.trim()}>
-      <span className="text-xs font-bold text-[#c9c9cf]">{label}</span>
+      <span className="text-sm font-bold text-black uppercase tracking-wider">{label}</span>
       {children}
     </label>
   );
